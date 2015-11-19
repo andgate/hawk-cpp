@@ -1,3 +1,0 @@
-trait Container a where
-  ~Container :: ()
-  ([]) :: int -> a
