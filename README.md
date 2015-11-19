@@ -4,11 +4,17 @@ Hawk is a languaged designed to function very similar to C++, but borrowing elem
 
 # Toolchain
 Compiler: hkc
+
 Debugger: hdb
+
 Project Manager: nest
+
 Project Package: egg
+
 Linter: eagle
+
 Standard Libary: Core
+
 Main repository: flock.io
 
 
