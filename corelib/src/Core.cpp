@@ -3,8 +3,7 @@
 
 using namespace std;
 
-void testFunc()
+int testFunc()
 {
-  cout << "Hello world\n" << endl;
-  cin.get();
+  return 42;
 }
