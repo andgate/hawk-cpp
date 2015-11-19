@@ -1,0 +1,8 @@
+module Core.Data.Maybe
+
+Maybe@ public
+Maybe a = Just a | Nothing
+
+Functor +> Maybe
+  map f (Just a) = Just (f a)
+  map f Nothing = Nothing

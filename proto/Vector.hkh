@@ -1,0 +1,7 @@
+class Vector a :=
+  elements :: [a]
+  elements = []
+
+  Vector :: ()
+  Vector :=
+    elements = []

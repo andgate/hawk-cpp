@@ -1,0 +1,5 @@
+module Core.Class.Functor
+
+Functor@ abstract public
+Functor f a =
+  map :: (a -> b) -> f a -> f b

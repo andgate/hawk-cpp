@@ -1,0 +1,20 @@
+module Core.Data.Array
+
+import Core.Data.Maybe1
+
+Data:
+
+Array@ public
+Array e =
+@public
+  get :: Int -> Maybe e
+  push :: e -> ()
+  pop :: Maybe e
+
+  ([])@ operator=subfix
+  ([]): Int -> Maybe e
+  ([]) n = get n
+
+@private
+  elements :: [e]
+  size :: Int

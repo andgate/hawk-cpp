@@ -1,0 +1,9 @@
+module Main
+
+import System.IO
+
+main@ public
+main: ()
+main =
+  print "Hello world"
+  return () -- since (), return is optional
