@@ -2,6 +2,16 @@
 Hawk is a languaged designed to function very similar to C++, but borrowing elements from Haskell's type system and clean syntax style. Hawk is intended to strike a balance between clarity and control. Check out the prototype code for examples of how a Hawk program should look. Currently the compiler needs to be built, which you can find in hawkc. As time goes on, this will eventually contain the base toolchain for development with Hawk 
 
 
+# Toolchain
+Compiler: hkc
+Debugger: hdb
+Project Manager: nest
+Project Package: egg
+Linter: eagle
+Standard Libary: Core
+Main repository: flock.io
+
+
 # Building
 Need to build boost for yourself, static and multi-threaded.
 To build hawk, go into the root directory and create a folder called "build".
