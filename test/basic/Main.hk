@@ -1,0 +1,16 @@
+module Main
+
+dbl@ public
+dbl: Int -> Int
+dbl x =
+  x + x
+
+sqr@ public
+sqr: Int -> Int
+sqr x = x * x
+
+main@ program="test" public
+main: ()
+main =
+  y = dbl (sqr x)
+  return
