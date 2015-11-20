@@ -32,7 +32,7 @@ sqr@ public inline -- the inline is optional, and will be inferred (eventually!)
 sqr: Int -> Int
 sqr x = x * x
 
-/*
+
 main@ program="test" public
 main: ()
 main =
