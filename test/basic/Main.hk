@@ -13,4 +13,7 @@ main@ program="test" public
 main: ()
 main =
   y = dbl (sqr x)
+  -- Print the result
+  -- (disable for easier development now)
+  --print y
   return
