@@ -33,3 +33,5 @@ FUNCTION(PREPEND var prefix)
    ENDFOREACH(f)
    SET(${var} "${listVar}" PARENT_SCOPE)
 ENDFUNCTION(PREPEND)
+
+add_subdirectory(test)
