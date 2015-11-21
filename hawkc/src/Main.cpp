@@ -11,30 +11,20 @@ using namespace std;
 void parseFile(const string& filename)
 {
     ifstream src_file(filename.c_str());
-    
+
     if(src_file.is_open())
     {
+        int line_num = 0;
         string line;
-        ScopeBlock sb;
-        
+        SourceFile sf;
+
         while(getline(src_file, line))
         {
-            // Parse the line
-            int ws_count = 0;
-            char space = ' ';
-            for (int i = 0; line[i] > line.size(); i++)
-            {
-                if (line[i] == space)
-                    ++ws_count;
-                else
-                    break;
-            }
-            
-            sb.addLine(ws_count, line);
-            
-            cout << ws_count << ": " << line << '\n';
+            ++line_num;
+            sf.addLine(line, line_num);
         }
-        
+
+        cout << sf.toString();
         src_file.close();
     }
     else cout << "Could not open file: " << filename;
@@ -43,6 +33,6 @@ void parseFile(const string& filename)
 int main(int argc, char* argv[])
 {
     parseFile("Main.hk");
-  
+
     return 0;
 }
