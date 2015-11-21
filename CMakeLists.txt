@@ -5,6 +5,8 @@ project (Hawk)
 set (Hawk_VERSION_MAJOR 1)
 set (Hawk_VERSION_MINOR 0)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 # boost
@@ -33,5 +35,3 @@ FUNCTION(PREPEND var prefix)
    ENDFOREACH(f)
    SET(${var} "${listVar}" PARENT_SCOPE)
 ENDFUNCTION(PREPEND)
-
-add_subdirectory(test)
