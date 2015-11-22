@@ -1,6 +1,6 @@
 #include <boost/spirit/include/qi.hpp>
 #include <Core.h>
-#include "Lexer.h"
+#include "lex.h"
 
 #include <iostream>
 #include <fstream>
@@ -32,7 +32,7 @@ void parseFile(const string& filename)
 
 int main(int argc, char* argv[])
 {
-    parseFile("Main.hk");
+    parseFile("bare.hk");
 
     return 0;
 }
