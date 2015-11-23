@@ -4,15 +4,20 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 using namespace std;
+
+#include <boost/ptr_container/ptr_vector.hpp>
 
 class SourceFile
 {
 public:
     void addLine(const string& line, const int& line_num);
 
+    SourceLine operator[](const int& n);
+
+    int size();
+
     string toString();
 private:
-    vector<shared_ptr<SourceLine>> m_srcLines;
+    boost::ptr_vector<SourceLine> m_srcLines;
 };

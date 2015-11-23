@@ -1,6 +1,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <Core.h>
 #include "lex.h"
+#include "parser.h"
 
 #include <iostream>
 #include <fstream>
@@ -26,6 +27,8 @@ void parseFile(const string& filename)
 
         cout << sf.toString();
         src_file.close();
+
+        hawk::parse(sf);
     }
     else cout << "Could not open file: " << filename;
 }
