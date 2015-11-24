@@ -3,13 +3,11 @@ include_directories(${Hawk_SOURCE_DIR}/corelib/include)
 set (CORE_SOURCES
   Core.cpp
   AST.cpp
-  Whitespace.cpp
 )
 
 set (CORE_HEADERS
   Core.h
   AST.h
-  Whitespace.h
 )
 
 PREPEND(CORE_SOURCES src ${CORE_SOURCES})

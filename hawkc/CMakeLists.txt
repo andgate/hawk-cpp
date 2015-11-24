@@ -4,19 +4,15 @@ link_directories(${Hawk_SOURCE_DIR/corelib/src})
 
 set (HAWKC_SOURCES
   Main.cpp
-  parser.cpp
-  tokenizer.cpp
-  lex.cpp
-  lex/SourceFile.cpp
-  lex/SourceLine.cpp
+  Parser.cpp
+  Lexer.cpp
+  Lexer/Token.cpp
 )
 
 set (HAWKC_HEADERS
-  parser.h
-  tokenizer.h
-  lex.h
-  lex/SourceFile.h
-  lex/SourceLine.h
+  Parser.h
+  Lexer.h
+  Lexer/Token.h
 )
 
 PREPEND(HAWKC_SOURCES src ${HAWKC_SOURCES})

@@ -1,36 +1,42 @@
 #include <boost/spirit/include/qi.hpp>
 #include <Core.h>
-#include "lex.h"
-#include "parser.h"
+#include "Lexer.h"
+#include "Parser.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cerrno>
 using namespace std;
+
+std::string get_file_contents(const string& filename)
+{
+  std::ifstream in(filename, std::ios::in | std::ios::binary);
+  if (in)
+  {
+    std::string contents;
+    in.seekg(0, std::ios::end);
+    contents.resize(in.tellg());
+    in.seekg(0, std::ios::beg);
+    in.read(&contents[0], contents.size());
+    in.close();
+    return(contents);
+  }
+  throw(errno);
+}
 
 // someday, this will return a list of strings or something
 void parseFile(const string& filename)
 {
-    ifstream src_file(filename.c_str());
+  string src_contents = get_file_contents(filename);
+  Lexer lex(src_contents);
 
-    if(src_file.is_open())
-    {
-        int line_num = 0;
-        string line;
-        SourceFile sf;
+  lex.debug();
 
-        while(getline(src_file, line))
-        {
-            ++line_num;
-            sf.addLine(line, line_num);
-        }
-
-        cout << sf.toString();
-        src_file.close();
-
-        hawk::parse(sf);
-    }
-    else cout << "Could not open file: " << filename;
+  while(lex.hasToken())
+  {
+    auto tok = lex.getToken();
+  }
 }
 
 int main(int argc, char* argv[])
