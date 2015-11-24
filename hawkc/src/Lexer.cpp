@@ -1,7 +1,5 @@
 #include "Lexer.h"
 
-#include <iostream> // cout
-
 Lexer::Lexer(const std::string& src)
   : m_currTok(0)
 {
@@ -33,14 +31,6 @@ Lexer& Lexer::operator=(Lexer&& rhs)
 bool Lexer::hasToken() { return (m_currTok < m_tokens.size()); }
 
 std::shared_ptr<Token> Lexer::getToken() { return m_tokens[m_currTok++]; }
-
-void Lexer::debug()
-{
-  for(auto token : m_tokens)
-  {
-    std::cout << token->getLineNum() << " - " << token->getScope() << ": " << token->getId() << std::endl;
-  }
-}
 
 
 // This whole thing is NASTY! Can I put this all into a throw-away class?
@@ -146,4 +136,15 @@ void Lexer::eraseMultiLineComment(int start_index)
   auto end_comment = m_tokens.begin() + token_index + 1;
 
   m_tokens.erase(start_comment, end_comment);
+}
+
+#include <iostream>
+
+void Lexer::debug()
+{
+  std::cout << "Lexer produced the following tokens at the given line number - scope..." << std::endl;
+  for(auto token : m_tokens)
+  {
+    std::cout << token->getLineNum() << " - " << token->getScope() << ": " << token->getId() << std::endl;
+  }
 }

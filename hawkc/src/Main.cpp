@@ -1,6 +1,5 @@
 #include <boost/spirit/include/qi.hpp>
 #include <Core.h>
-#include "Lexer.h"
 #include "Parser.h"
 
 #include <iostream>
@@ -28,9 +27,9 @@ std::string get_file_contents(const std::string& filename)
 void parseFile(const std::string& filename)
 {
   std::string src_contents = get_file_contents(filename);
-  Lexer lex(src_contents);
+  Parser parser(src_contents);
 
-  lex.debug();
+  parser.debug();
 
   /*while(lex.hasToken())
   {
