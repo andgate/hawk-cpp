@@ -26,4 +26,8 @@ private:
   int m_currTok;
 
   void tokenize(const std::string&);
+
+  void eraseComments();
+  void eraseSingleLineComment(int start_index);
+  void eraseMultiLineComment(int start_index);
 };

@@ -7,9 +7,8 @@
 #include <fstream>
 #include <string>
 #include <cerrno>
-using namespace std;
 
-std::string get_file_contents(const string& filename)
+std::string get_file_contents(const std::string& filename)
 {
   std::ifstream in(filename, std::ios::in | std::ios::binary);
   if (in)
@@ -26,17 +25,17 @@ std::string get_file_contents(const string& filename)
 }
 
 // someday, this will return a list of strings or something
-void parseFile(const string& filename)
+void parseFile(const std::string& filename)
 {
-  string src_contents = get_file_contents(filename);
+  std::string src_contents = get_file_contents(filename);
   Lexer lex(src_contents);
 
   lex.debug();
 
-  while(lex.hasToken())
+  /*while(lex.hasToken())
   {
     auto tok = lex.getToken();
-  }
+  }*/
 }
 
 int main(int argc, char* argv[])

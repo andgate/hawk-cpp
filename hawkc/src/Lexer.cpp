@@ -6,6 +6,7 @@ Lexer::Lexer(const std::string& src)
   : m_currTok(0)
 {
   tokenize(src);
+  eraseComments();
 }
 
 Lexer::Lexer(const Lexer& rhs)
@@ -37,7 +38,7 @@ void Lexer::debug()
 {
   for(auto token : m_tokens)
   {
-    std::cout << token->m_line_num << " - " << token->m_scope << ": " << token->m_idStr << std::endl;
+    std::cout << token->getLineNum() << " - " << token->getScope() << ": " << token->getId() << std::endl;
   }
 }
 
@@ -97,5 +98,52 @@ void Lexer::tokenize(const std::string& src)
       }
     }
   }
+}
 
+void Lexer::eraseComments()
+{
+  for(int token_index = 0; token_index < m_tokens.size(); token_index++)
+  {
+    auto token_id = m_tokens[token_index]->getId();
+
+    if(token_id == "//")
+    {
+      eraseSingleLineComment(token_index);
+      --token_index;
+    }
+    else if (token_id == "/*")
+    {
+      eraseMultiLineComment(token_index);
+      --token_index;
+    }
+  }
+}
+
+void Lexer::eraseSingleLineComment(int start_index)
+{
+  int comment_line_num = m_tokens[start_index]->getLineNum();
+  auto start_comment = m_tokens.begin() + start_index;
+  int token_index = start_index;
+
+  while( (token_index < m_tokens.size())
+      && (comment_line_num == m_tokens[token_index]->getLineNum()))
+  { ++token_index; }
+
+  auto end_comment = m_tokens.begin() + token_index;
+
+  m_tokens.erase(start_comment, end_comment);
+}
+
+void Lexer::eraseMultiLineComment(int start_index)
+{
+  auto start_comment = m_tokens.begin() + start_index;
+  int token_index = start_index;
+
+  while( (token_index < m_tokens.size())
+      && (m_tokens[token_index]->getId() != "*/"))
+  { ++token_index; }
+
+  auto end_comment = m_tokens.begin() + token_index + 1;
+
+  m_tokens.erase(start_comment, end_comment);
 }
