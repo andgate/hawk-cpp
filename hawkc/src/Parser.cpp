@@ -1,41 +1,31 @@
 #include "Parser.h"
 
-Parser::Parser(const std::string& src)
-  : m_lex(src)
-{}
+#include "Lexer.h"
 
-Parser::Parser(const Parser& rhs)
-  : m_lex(rhs.m_lex)
-{}
+#include <iostream>
 
-Parser::Parser(Parser&& rhs)
-  : m_lex(std::move(rhs.m_lex))
-{}
+static ExprAST parse(const token_vector& tokens);
 
-Parser& Parser::operator=(const Parser& rhs)
+ExprAST Parser::run(const std::string& src)
 {
-  m_lex = rhs.m_lex;
+  auto tokens = Lexer::run(src);
+  Lexer::debug(tokens);
 
-  return *this;
+  return parse(tokens);
 }
 
-Parser& Parser::operator=(Parser&& rhs)
+void Parser::debug(const ExprAST& ast)
 {
-  m_lex = std::move(rhs.m_lex);
-
-  return *this;
+  std::cout << std::endl;
+  std::cout << "Parser Produced the following output" << std::endl;
 }
 
-
-ExprAST Parser::parseNumericExpression()
+static ExprAST parseNumericExpression()
 {
   return NumberExprAST(0);
 }
 
-#include <iostream>
-
-void Parser::debug()
+static ExprAST parse(const token_vector& tokens)
 {
-  m_lex.debug();
-  std::cout << "should print some sort of ast";
+  return parseNumericExpression();
 }

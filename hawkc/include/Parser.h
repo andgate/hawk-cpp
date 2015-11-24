@@ -2,27 +2,10 @@
 
 #include "AST.h"
 
-#include "Lexer.h"
-#include "Lexer/Token.h"
-
-#include <memory>
-
-class Parser
+namespace Parser
 {
-public:
-  Parser(const std::string&);
-  Parser(const Parser&);
-  Parser(Parser&&);
 
-  Parser& operator=(const Parser&);
-  Parser& operator=(Parser&&);
+ExprAST run(const std::string& src);
+void debug(const ExprAST& ast);
 
-  void parse();
-
-  void debug();
-
-private:
-  Lexer m_lex;
-
-  ExprAST parseNumericExpression();
-};
+}
