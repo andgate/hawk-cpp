@@ -10,8 +10,6 @@ set (HAWKC_SOURCES
   Lexer.cpp
   Lexer/Token.cpp
   Nest.cpp
-  Nest/NestFinder.cpp
-  Nest/NestBuilder.cpp
   Nest/NestConf.cpp
   jsoncpp.cpp
 )
@@ -23,8 +21,6 @@ set (HAWKC_HEADERS
   Lexer.h
   Lexer/Token.h
   Nest.h
-  Nest/NestFinder.h
-  Nest/NestBuilder.h
   Nest/NestConf.h
   json/json.h
   json/json-forwards.h

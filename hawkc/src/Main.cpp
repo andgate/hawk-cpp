@@ -34,8 +34,8 @@ void parseFile(const std::string& filename)
 
 int main(int argc, char* argv[])
 {
-  bool debug = true;
-  Compiler::run(debug);
+	auto debug = true;
+	Compiler::run(debug);
 
-  return 0;
+	return 0;
 }

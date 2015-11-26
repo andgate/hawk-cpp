@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AST.h"
+#include "Nest/NestConf.h"
 
 #include <memory>
 
@@ -11,6 +12,8 @@ public:
 
   Nest();
 
+  static std::shared_ptr<NestConf> find();
+  static std::shared_ptr<Nest> build(std::shared_ptr<NestConf>);
   static std::shared_ptr<Nest> fetch();
 
 private:
