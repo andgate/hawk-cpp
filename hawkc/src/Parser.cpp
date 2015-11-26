@@ -72,25 +72,31 @@ static token_vector parseTypeSigStr(const int& token_index, const token_vector& 
   }
 }
 
-static TypeSigAST parseTypeSigAST(const int& token_index, const token_vector& tokens)
+static std::shared_ptr<TypeSigAST> parseTypeSigAST(const int& token_index, const token_vector& tokens)
 {
   auto name = tokens[token_index - 1];
   auto args = parseTypeSigStr(token_index, tokens);
 
-  return TypeSigAST(name, args);
+  return std::make_shared<TypeSigAST>(TypeSigAST(name, args));
 }
 
-static ModuleAST parse(const token_vector& tokens)
+static ModuleAST parseModule(const token_vector& tokens)
 {
+  typesig_vector types;
   for(int token_index = 0; token_index < tokens.size(); token_index++)
   {
     auto token = tokens[token_index];
 
     if(token->getId() == ":")
     {
-        parseTypeSigAST(token_index, tokens);
+        types.push_back(parseTypeSigAST(token_index, tokens));
     }
   }
 
-  return parseTypeSigAST(tokens);
+  return ModuleAST(tokens[0], types);
+}
+
+static ExprAST parse(const token_vector& tokens)
+{
+  return ExprAST();
 }

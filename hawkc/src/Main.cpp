@@ -1,5 +1,4 @@
-#include <boost/spirit/include/qi.hpp>
-#include <Core.h>
+#include "Compiler.h"
 #include "AST.h"
 #include "Parser.h"
 
@@ -35,7 +34,8 @@ void parseFile(const std::string& filename)
 
 int main(int argc, char* argv[])
 {
-    parseFile("bare.hk");
+  bool debug = true;
+  Compiler::run(debug);
 
-    return 0;
+  return 0;
 }

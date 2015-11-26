@@ -9,10 +9,11 @@ set (HAWKC_SOURCES
   Parser.cpp
   Lexer.cpp
   Lexer/Token.cpp
-  Project.cpp
-  Project/ProjectFinder.cpp
-  Project/ProjectBuilder.cpp
-  Project/ProjectConf.cpp
+  Nest.cpp
+  Nest/NestFinder.cpp
+  Nest/NestBuilder.cpp
+  Nest/NestConf.cpp
+  jsoncpp.cpp
 )
 
 set (HAWKC_HEADERS
@@ -21,10 +22,12 @@ set (HAWKC_HEADERS
   Parser.h
   Lexer.h
   Lexer/Token.h
-  Project.h
-  Project/ProjectFinder.h
-  Project/ProjectBuilder.h
-  Project/ProjectConf.h
+  Nest.h
+  Nest/NestFinder.h
+  Nest/NestBuilder.h
+  Nest/NestConf.h
+  json/json.h
+  json/json-forwards.h
 )
 
 PREPEND(HAWKC_SOURCES src ${HAWKC_SOURCES})
