@@ -41,9 +41,9 @@ static token_vector tokenize(const std::string& src)
   int start_token = 0;
   int end_token = 0;
 
-  for(int i = 0; i < src.size(); i++)
+  for(auto i = 0; i < src.size(); i++)
   {
-    char curr_tok = src[i];
+    auto curr_tok = src[i];
 
     if(curr_tok == '\n')
     {

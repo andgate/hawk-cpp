@@ -97,3 +97,5 @@ public:
   ModuleAST(std::shared_ptr<Token> name, std::vector<std::shared_ptr<TypeSigAST>> type_sig)
     : m_name(name), type_sig(std::move(type_sig)) {}
 };
+
+typedef std::vector<std::shared_ptr<ModuleAST>> module_vector;

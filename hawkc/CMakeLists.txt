@@ -12,6 +12,7 @@ set (HAWKC_SOURCES
   Nest.cpp
   Nest/NestConf.cpp
   jsoncpp.cpp
+  Util.cpp
 )
 
 set (HAWKC_HEADERS
@@ -24,6 +25,8 @@ set (HAWKC_HEADERS
   Nest/NestConf.h
   json/json.h
   json/json-forwards.h
+  tinydir.h
+  Util.h
 )
 
 PREPEND(HAWKC_SOURCES src ${HAWKC_SOURCES})

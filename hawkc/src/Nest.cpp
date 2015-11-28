@@ -1,21 +1,47 @@
 #include "Nest.h"
 
+#include "Nest/NestConf.h"
+
 Nest::Nest()
   : m_modules()
 {}
 
+Nest::Nest(const Nest& rhs)
+	: m_modules(rhs.m_modules)
+{}
 
-std::shared_ptr<NestConf> find()
+Nest::Nest(Nest&& rhs)
+	: m_modules(std::move(rhs.m_modules))
+{}
+
+Nest& Nest::operator=(const Nest& rhs)
 {
-	return nullptr;
+	m_modules = rhs.m_modules;
+	return *this;
 }
 
-std::shared_ptr<Nest> build(std::shared_ptr<NestConf> nest_conf)
+Nest& Nest::operator=(Nest&& rhs)
 {
-	return nullptr;
+	m_modules = std::move(rhs.m_modules);
+	return *this;
 }
 
-std::shared_ptr<Nest> Nest::fetch()
+
+std::shared_ptr<Nest> Nest::load(const std::string& nest_dir)
 {
-	return build(find());
+	auto conf = NestConf::loadFromDir(nest_dir);
+
+	return std::make_shared<Nest>();
+}
+
+void Nest::build()
+{
+}
+
+
+#include <iostream>
+
+void Nest::debug()
+{
+	std::cout << "*print debug info*" << std::endl;
 }

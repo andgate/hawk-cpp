@@ -1,7 +1,6 @@
 /** This is the first document comment */
 module Main // name the module main, for classic sake
 
--- This is a comment
 /*
   This is a multiline comment
 */
@@ -20,7 +19,8 @@ module Main // name the module main, for classic sake
   is automatically inlined and optimized.
  */
 dbl@ public       -- Settings declaration
-dbl: Int -> Int   -- Type declaration
+dbl: Int @ const
+  -> Int          -- Type declaration
 dbl x =           -- Expression declaration
   x + x           -- Single expression statement
 

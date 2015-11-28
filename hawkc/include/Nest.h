@@ -1,20 +1,22 @@
 #pragma once
 
 #include "AST.h"
-#include "Nest/NestConf.h"
 
 #include <memory>
 
 class Nest
 {
 public:
-  typedef std::vector<std::shared_ptr<ModuleAST>> module_vector;
-
   Nest();
+  Nest(const Nest& rhs);
+  Nest(Nest&& rhs);
 
-  static std::shared_ptr<NestConf> find();
-  static std::shared_ptr<Nest> build(std::shared_ptr<NestConf>);
-  static std::shared_ptr<Nest> fetch();
+  Nest& operator=(const Nest& rhs);
+  Nest& operator=(Nest&& rhs);
+
+  static std::shared_ptr<Nest> load(const std::string& nest_dir);
+  void build();
+  void debug();
 
 private:
   module_vector m_modules;
