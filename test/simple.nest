@@ -1,0 +1,5 @@
+{
+	"project" : "Simple"
+	"dirs" : "."
+	"files" : "Main.hs"
+}

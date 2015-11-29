@@ -1,13 +1,13 @@
 #include "Parser.h"
 
-#include "Lexer.h"
+#include "Lexer.h"/l
 
 #include <iostream>
 #include <memory>
 
-static ExprAST parse(const token_vector& tokens);
+static Expr parse(const token_vector& tokens);
 
-ExprAST Parser::run(const std::string& src)
+Expr Parser::run(const std::string& src)
 {
   auto tokens = Lexer::run(src);
   Lexer::debug(tokens);
@@ -15,19 +15,19 @@ ExprAST Parser::run(const std::string& src)
   return parse(tokens);
 }
 
-void Parser::debug(const ExprAST& ast)
+void Parser::debug(const Expr& ast)
 {
   std::cout << std::endl;
   std::cout << "Parser Produced the following output" << std::endl;
 }
 
-/*static ExprAST parseNumericExpression(const token_vector& tokens)
+/*static Expr parseNumericExpression(const token_vector& tokens)
 {
-  return NumberExprAST(0);
+  return Exprb(0);
 }*/
 
 
-/*static ExprAST parseProtoExpression(const token_vector& tokens)
+/*static Expr parseProtoExpression(const token_vector& tokens)
 {
   for(int i = 0; i < tokens.size(); i++)
   {
@@ -44,7 +44,7 @@ void Parser::debug(const ExprAST& ast)
   return PrototypeAST(tokens);
 }*/
 
-static token_vector parseTypeSigStr(const int& token_index, const token_vector& tokens)
+/*static token_vector parseTypeSigStr(const int& token_index, const token_vector& tokens)
 {
   int scope = tokens[token_index - 1]->getScope();
   int lineNum = tokens[token_index - 1]->getLineNum();
@@ -78,25 +78,20 @@ static std::shared_ptr<TypeSigAST> parseTypeSigAST(const int& token_index, const
   auto args = parseTypeSigStr(token_index, tokens);
 
   return std::make_shared<TypeSigAST>(TypeSigAST(name, args));
+}*/
+
+static std::unique_ptr<ModuleAST> parseModule(std::unique_ptr<ModuleAST> module_ptr)
+{
+	// Check the module expr to see is unparsed.
+	// If so, then need to scan tokens for module name,
+	// and module name definition conflicts.
+	// Once module name is adjusted correctly, parsing begins.
+
+
+	return module_ptr;
 }
 
-static ModuleAST parseModule(const token_vector& tokens)
+static Expr parse(const token_vector& tokens)
 {
-  typesig_vector types;
-  for(int token_index = 0; token_index < tokens.size(); token_index++)
-  {
-    auto token = tokens[token_index];
-
-    if(token->getId() == ":")
-    {
-        types.push_back(parseTypeSigAST(token_index, tokens));
-    }
-  }
-
-  return ModuleAST(tokens[0], types);
-}
-
-static ExprAST parse(const token_vector& tokens)
-{
-  return ExprAST();
+  return Expr();
 }

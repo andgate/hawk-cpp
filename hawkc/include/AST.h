@@ -1,15 +1,22 @@
 #pragma once
 
-#include "Lexer/Token.h"
+#include "AST/Expr.h"
+#include "AST/UnparsedExpr.h"
+#include "AST/Module.h"
 
-#include <memory>
-#include <string>
-#include <vector>
 
-/// ExprAST - Base class for all expression nodes.
-class ExprAST {
+/*
+
+/// NumberExprAST - Expression class for numeric literals like "1.0".
+class UnparsedExprAST : public ExprAST
+{
 public:
-  virtual ~ExprAST() {}
+	UnparsedExprAST(token_vector Val)
+		: Val(std::move(Val))
+	{}
+
+private:
+	token_vector Val;
 };
 
 /// NumberExprAST - Expression class for numeric literals like "1.0".
@@ -87,15 +94,4 @@ public:
               std::unique_ptr<ExprAST> Body)
     : Proto(std::move(Proto)), Body(std::move(Body)) {}
 };
-
-class ModuleAST
-{
-  std::shared_ptr<Token> m_name;
-  std::vector<std::shared_ptr<TypeSigAST>> type_sig;
-
-public:
-  ModuleAST(std::shared_ptr<Token> name, std::vector<std::shared_ptr<TypeSigAST>> type_sig)
-    : m_name(name), type_sig(std::move(type_sig)) {}
-};
-
-typedef std::vector<std::shared_ptr<ModuleAST>> module_vector;
+*/

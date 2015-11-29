@@ -15,10 +15,16 @@ public:
 
 	static std::shared_ptr<NestConf> loadFromDir(const std::string&);
 
-private:
-  std::vector<std::string> m_src_dirs;
-  std::vector<std::string> m_src_files;
+	std::string getName();
+	std::vector<std::string> getDirs();
+	std::vector<std::string> getFiles();
+	std::vector<std::string> getModules();
 
-  static std::shared_ptr<NestConf> load(const std::string&);
-  static std::string find(const std::string&);
+private:
+	std::string				 m_name;
+	std::vector<std::string> m_dirs;
+	std::vector<std::string> m_files;
+
+	static std::shared_ptr<NestConf> load(const std::string&);
+	static std::string find(const std::string&);
 };

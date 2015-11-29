@@ -5,7 +5,7 @@
 namespace Parser
 {
 
-ExprAST run(const std::string& src);
-void debug(const ExprAST& ast);
+Expr run(const std::string& src);
+void debug(const Expr& ast);
 
 }

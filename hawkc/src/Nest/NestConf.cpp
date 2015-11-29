@@ -5,22 +5,24 @@
 #include "Util.h"
 
 NestConf::NestConf()
-	: m_src_dirs()
-	, m_src_files()
+	: m_name()
+	, m_dirs()
+	, m_files()
 {}
 
 NestConf::NestConf(Json::Value& root)
-	: m_src_dirs(root["src_dirs"].size())
-	, m_src_files(root["src_files"].size())
+	: m_name(root["nest"].asString())
+	, m_dirs(root["dirs"].size())
+	, m_files(root["files"].size())
 {
-	for(const Json::Value& src_dir : root["src_dirs"])
+	for(auto src_dir : root["dirs"])
 	{
-		m_src_dirs.push_back(src_dir.asString());
+		m_dirs.push_back(src_dir.asString());
 	}
 
-	for (const Json::Value& src_file : root["src_files"])
+	for (auto src_file : root["files"])
 	{
-		m_src_files.push_back(src_file.asString());
+		m_files.push_back(src_file.asString());
 	}
 }
 
