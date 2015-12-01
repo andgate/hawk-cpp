@@ -19,5 +19,6 @@ public:
   void debug();
 
 private:
+	std::string m_name;
   module_vector m_modules;
 };

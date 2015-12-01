@@ -8,25 +8,30 @@
 #include <boost/filesystem.hpp>
 
 Nest::Nest()
-  : m_modules()
+  : m_name()
+  , m_modules()
 {}
 
 Nest::Nest(const Nest& rhs)
-	: m_modules(rhs.m_modules)
+	: m_name()
+	,m_modules(rhs.m_modules)
 {}
 
 Nest::Nest(Nest&& rhs)
-	: m_modules(std::move(rhs.m_modules))
+	: m_name(std::move(rhs.m_name))
+	, m_modules(std::move(rhs.m_modules))
 {}
 
 Nest& Nest::operator=(const Nest& rhs)
 {
+	m_name = rhs.m_name;
 	m_modules = rhs.m_modules;
 	return *this;
 }
 
 Nest& Nest::operator=(Nest&& rhs)
 {
+	m_name = std::move(rhs.m_name);
 	m_modules = std::move(rhs.m_modules);
 	return *this;
 }
@@ -59,8 +64,6 @@ void Nest::build()
 	// do a top-level parse of module bodies
 }
 
-
-#include <iostream>
 
 void Nest::debug()
 {
