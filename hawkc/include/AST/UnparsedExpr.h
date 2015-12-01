@@ -4,17 +4,16 @@
 
 #include "Lexer/Token.h"
 
-
 #include <memory>
 #include <vector>
 
 class UnparsedExpr : public Expr
 {
 public:
-	UnparsedExpr(token_vector Val)
-		: Val(std::move(Val))
+	UnparsedExpr(std::shared_ptr<token_vector> Val)
+		: Val(Val)
 	{}
 
 private:
-	token_vector Val;
+	std::shared_ptr<token_vector> Val;
 };

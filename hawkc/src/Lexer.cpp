@@ -3,15 +3,21 @@
 #include <iostream>
 
 
-static token_vector tokenize(const std::string& src);
+static std::shared_ptr<token_vector> tokenize(const std::string& src);
 static void eraseComments(token_vector& tokens);
 
-
-token_vector Lexer::run(const std::string& src)
+std::shared_ptr<token_vector> Lexer::run(const std::string& src_txt)
 {
-  auto tokens = tokenize(src);
-  eraseComments(tokens);
-  return tokens;
+	auto tokens = tokenize(src_txt);
+	eraseComments(*tokens);
+	return tokens;
+}
+
+std::shared_ptr<token_vector> Lexer::run(std::istream& src_txt_in)
+{
+	std::string src_txt;
+	std::getline(src_txt_in, src_txt, (char)EOF);
+	return run(src_txt);
 }
 
 void Lexer::debug(const token_vector& tokens)
@@ -25,9 +31,9 @@ void Lexer::debug(const token_vector& tokens)
 
 
 // This whole thing is NASTY! Can I put this all into a throw-away class?
-static token_vector tokenize(const std::string& src)
+static std::shared_ptr<token_vector> tokenize(const std::string& src)
 {
-  token_vector tokens;
+  auto tokens = std::make_shared<token_vector>();
 
   std::string tok_acc;
   char delim = ' ';
@@ -50,7 +56,7 @@ static token_vector tokenize(const std::string& src)
       if(isOnToken)
       {
         // Ooops! Should make new token in factory!
-        tokens.push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
+        tokens->push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
         tok_acc.clear();
         isOnToken = false;
       }
@@ -70,7 +76,7 @@ static token_vector tokenize(const std::string& src)
     {
       if(isOnToken)
       {
-        tokens.push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
+        tokens->push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
         tok_acc.clear();
         isOnToken = false;
       }

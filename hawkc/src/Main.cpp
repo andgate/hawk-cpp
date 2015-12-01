@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 {
 	auto debug = true;
 
-	if (argc == 0)
+	if (argc <= 1)
 	{
 		Compiler::run(debug);
 	}

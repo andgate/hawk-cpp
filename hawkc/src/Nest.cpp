@@ -1,8 +1,11 @@
 #include "Nest.h"
 
 #include "Nest/NestConf.h"
-#include "Util.h"
 #include "Lexer.h"
+
+#include <iostream>
+#include <fstream>
+#include <boost/filesystem.hpp>
 
 Nest::Nest()
   : m_modules()
@@ -33,17 +36,17 @@ std::shared_ptr<Nest> Nest::load(const std::string& nest_dir)
 {
 	auto nest = std::make_shared<Nest>();
 
-	auto conf = NestConf::loadFromDir(nest_dir);
-	for(auto module_name : conf->getFiles())
+	auto conf = NestConf::load(nest_dir);
+	for(auto module_file_path : conf->get_src_files())
 	{
-		auto src_txt = Util::get_file_contents(module_name);
+		std::ifstream src_txt_in(module_file_path, std::ifstream::binary);
 
-		auto tokens = Lexer::run(src_txt);
-		Lexer::debug(tokens);
+		auto tokens = Lexer::run(src_txt_in);
+		Lexer::debug(*tokens);
 
 		auto module_body = std::make_shared<UnparsedExpr>(tokens);
 
-		auto module = std::make_shared<ModuleAST>(module_name, module_body);
+		auto module = std::make_shared<ModuleAST>(module_file_path, module_body);
 		nest->m_modules.push_back(module);
 	}
 

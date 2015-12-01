@@ -1,6 +1,6 @@
 #include "Parser.h"
 
-#include "Lexer.h"/l
+#include "Lexer.h"
 
 #include <iostream>
 #include <memory>
@@ -10,9 +10,9 @@ static Expr parse(const token_vector& tokens);
 Expr Parser::run(const std::string& src)
 {
   auto tokens = Lexer::run(src);
-  Lexer::debug(tokens);
+  Lexer::debug(*tokens);
 
-  return parse(tokens);
+  return parse(*tokens);
 }
 
 void Parser::debug(const Expr& ast)

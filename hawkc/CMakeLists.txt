@@ -31,7 +31,6 @@ set (HAWKC_HEADERS
   Nest/NestConf.h
   json/json.h
   json/json-forwards.h
-  tinydir.h
   Util.h
 )
 
