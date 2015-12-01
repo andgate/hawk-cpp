@@ -56,6 +56,7 @@ std::shared_ptr<Nest> Nest::load(const std::string& nest_dir)
 
 void Nest::build()
 {
+	// do a top-level parse of module bodies
 }
 
 

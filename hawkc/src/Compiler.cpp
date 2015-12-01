@@ -19,4 +19,7 @@ void Compiler::run(const std::string& run_dir, const bool& debug)
 
 	auto nest = Nest::load(run_dir);
 	nest->debug();
+	nest->build();
+
+	//nest->get_executables();
 }

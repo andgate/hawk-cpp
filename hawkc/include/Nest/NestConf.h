@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <set>
 
 #include "json/json.h"
 
@@ -30,8 +31,8 @@ public:
 private:
 	std::string				 m_name;
 	std::string				 m_project_dir;
-	std::vector<std::string> m_dirs;
-	std::vector<std::string> m_files;
+	std::set<std::string> m_dirs; // todo: make std::set
+	std::set<std::string> m_files; // todo: make std::set
 
-	static std::string find(const std::string&);
+	static std::string find(const std::string& nest_path_str);
 };
