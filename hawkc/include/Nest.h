@@ -20,5 +20,5 @@ public:
 
 private:
 	std::string m_name;
-  module_vector m_modules;
+	shared_module_vector m_modules;
 };

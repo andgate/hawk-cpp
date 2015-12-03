@@ -25,7 +25,10 @@ void Lexer::debug(const token_vector& tokens)
   std::cout << "Lexer produced the following tokens at the given line number - scope..." << std::endl;
   for(auto token : tokens)
   {
-    std::cout << token->getLineNum() << " - " << token->getScope() << ": " << token->getId() << std::endl;
+    std::cout
+		<< "(" << token->get_line_num() << "," << token->get_line_index() << ") "
+		<< " - " << "(" << token->get_scope() << "," << token->get_scope_index()
+		<< ": " << token->getId() << std::endl;
   }
 }
 
@@ -39,10 +42,14 @@ static std::shared_ptr<token_vector> tokenize(const std::string& src)
   char delim = ' ';
 
   int line_num = 1;
+  int line_index = 0;
 
-  int ws_count = 0;
+  int previous_scope = 0;
+  int scope = 0;
+  int scope_index = 0;
+
   bool mustCountScope = true;
-  bool isOnToken = false;
+  bool is_building_token = false;
 
   int start_token = 0;
   int end_token = 0;
@@ -53,37 +60,51 @@ static std::shared_ptr<token_vector> tokenize(const std::string& src)
 
     if(curr_tok == '\n')
     {
-      if(isOnToken)
+      if(is_building_token)
       {
-        // Ooops! Should make new token in factory!
-        tokens->push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
+		  ++line_index;
+		++scope_index;
+		tokens->push_back(std::make_shared<Token>(tok_acc, line_num, line_index, scope, scope_index));
         tok_acc.clear();
-        isOnToken = false;
+		is_building_token = false;
       }
 
       ++line_num;
-      ws_count = 0;
+	  line_index = 0;
+	  previous_scope = scope;
+      scope = 0;
       mustCountScope = true;
     }
     else if(curr_tok != delim)
     {
       // create token, add to tokens
       tok_acc += curr_tok;
-      mustCountScope = false;
-      isOnToken = true;
+	  is_building_token = true;
+
+	  if(mustCountScope)
+	  {
+		  mustCountScope = false;
+		  if(scope >= previous_scope)
+		  {
+			  scope_index = 0;
+		  }
+	  }
+	  
     }
     else if(curr_tok == delim)
     {
-      if(isOnToken)
-      {
-        tokens->push_back(std::make_shared<Token>(tok_acc, line_num, ws_count));
-        tok_acc.clear();
-        isOnToken = false;
-      }
+		if(is_building_token)
+		{
+			++scope_index;
+			++line_index;
+			tokens->push_back(std::make_shared<Token>(tok_acc, line_num, line_index, scope, scope_index));
+			tok_acc.clear();
+			is_building_token = false;
+		}
 
       if(mustCountScope)
       {
-        ++ws_count;
+        ++scope;
       }
     }
   }
@@ -93,12 +114,12 @@ static std::shared_ptr<token_vector> tokenize(const std::string& src)
 
 static void eraseSingleLineComment(token_vector& tokens, const int& start_index)
 {
-  int comment_line_num = tokens[start_index]->getLineNum();
+  int comment_line_num = tokens[start_index]->get_line_num();
   auto start_comment = tokens.begin() + start_index;
   int token_index = start_index;
 
   while( (token_index < tokens.size())
-      && (comment_line_num == tokens[token_index]->getLineNum()))
+      && (comment_line_num == tokens[token_index]->get_line_num()))
   { ++token_index; }
 
   auto end_comment = tokens.begin() + token_index;

@@ -1,47 +1,42 @@
 #pragma once
 
-#include "AST/Expr.h"
+#include "AST.h"
+#include "Symbol.h"
+#include "Lexer/Token.h"
 
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
+
+#include <boost/any.hpp>
 
 class ModuleAST
 {
-	std::string m_file_path;
-	std::shared_ptr<Expr> m_body;
-
 public:
-	ModuleAST(const std::string& file_path, std::shared_ptr<Expr> body)
-		: m_file_path(file_path)
-		, m_body(body)
-	{}
+	ModuleAST(const std::string& file_path, shared_token_vector tokens);
 
-	ModuleAST(const ModuleAST& rhs)
-		: m_file_path(rhs.m_file_path)
-		, m_body(rhs.m_body)
-	{}
+	ModuleAST(const ModuleAST& rhs);
 
-	ModuleAST(ModuleAST&& rhs)
-		: m_file_path(std::move(rhs.m_file_path))
-		, m_body(rhs.m_body)
-	{}
+	ModuleAST(ModuleAST&& rhs);
 
-	ModuleAST& operator=(const ModuleAST& rhs)
-	{
-		m_file_path = rhs.m_file_path;
-		m_body = rhs.m_body;
+	ModuleAST& operator=(const ModuleAST& rhs);
+	ModuleAST& operator=(ModuleAST&& rhs);
 
-		return *this;
-	}
+	shared_token_vector get_tokens();
 
-	ModuleAST& operator=(ModuleAST&& rhs)
-	{
-		m_file_path = std::move(rhs.m_file_path);
-		m_body = rhs.m_body;
+	void add_export(const std::string& export_name);
 
-		return *this;
-	}
+private:
+	std::string m_file_path;
+	shared_token_vector m_tokens;
+	std::vector<boost::any> m_asts;
+
+	std::vector<ModuleAST> m_imports;
+	std::vector<std::string> m_exports;
+
+	std::map<std::string, std::vector<Symbol>> m_sym_table;
 };
 
 typedef std::vector<std::shared_ptr<ModuleAST>> module_vector;
+typedef std::shared_ptr<module_vector> shared_module_vector;

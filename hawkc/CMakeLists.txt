@@ -10,6 +10,7 @@ set (HAWKC_SOURCES
   AST/Expr.cpp
   AST/UnparsedExpr.cpp
   Parser.cpp
+  Symbol.cpp
   Lexer.cpp
   Lexer/Token.cpp
   Nest.cpp
@@ -25,6 +26,7 @@ set (HAWKC_HEADERS
   AST/Expr.h
   AST/UnparsedExpr.h
   Parser.h
+  Symbol.h
   Lexer.h
   Lexer/Token.h
   Nest.h
