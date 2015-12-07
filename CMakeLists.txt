@@ -21,6 +21,7 @@ find_package(Boost REQUIRED
   thread
   regex
   filesystem
+  program_options
   )
 
 if(Boost_FOUND)
@@ -29,7 +30,7 @@ if(Boost_FOUND)
 endif()
 
 # include the subdirectory containing core library and programs
-subdirs(hawkc)
+subdirs(hkc nest)
 
 # Prepend is used to append the directory to a list of source/header files.
 FUNCTION(PREPEND var prefix)
