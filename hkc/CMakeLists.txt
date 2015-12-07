@@ -41,7 +41,7 @@ PREPEND(HKC_BIN_HEADERS include/hkc ${HKC_BIN_HEADERS})
 
 add_library (hkclib STATIC ${HKC_LIB_SOURCES} ${HKC_LIB_HEADERS})
 add_executable(hkc ${HKC_BIN_SOURCES} ${HKC_BIN_HEADERS})
-#target_link_libraries(hkc hkclib)
+target_link_libraries(hkc hkclib)
 
 
 if ( CMAKE_COMPILER_IS_GNUCC )
