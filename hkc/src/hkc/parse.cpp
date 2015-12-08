@@ -10,21 +10,27 @@ char OPTION_SYMBOL = '@';
 char TYPEDEC_SYMBOL = ':';
 char DEC_SYMBOL = '=';
 
-static void parse_top_level(hkc::Ast_ptr& ast);
-static void parse_top_level_exports(hkc::Ast_ptr& ast);
-static void parse_top_level_imports(hkc::Ast_ptr& ast);
-static void parse_top_level_config(hkc::Ast_ptr& ast);
-static void parse_top_level_typesig(hkc::Ast_ptr& ast);
-static void parse_top_level_function(hkc::Ast_ptr& ast);
+static void parse_top_level(hkc::Ast_sptr& ast);
+static void parse_top_level_exports(hkc::Ast_sptr& ast);
+static void parse_top_level_imports(hkc::Ast_sptr& ast);
+static void parse_top_level_config(hkc::Ast_sptr& ast);
+static void parse_top_level_typesig(hkc::Ast_sptr& ast);
+static void parse_top_level_function(hkc::Ast_sptr& ast);
 
-hkc::Ast_ptr hkc::parse(ast::Module_Vector_Shared modules)
+hkc::Ast_sptr hkc::parse(ast::Module_Vector_sptr modules)
 {
-	auto module_ast = std::make_unique<Ast>();
+	auto module_ast = std::make_shared<Ast>();
+	
+	module_ast->modules = *modules;
+
+	parse_top_level(module_ast);
 
 	return module_ast;
 }
 
-void parse_top_level(hkc::Ast_ptr& ast)
+// Builds modules dependency graph
+// and symbol table.
+void parse_top_level(hkc::Ast_sptr& ast)
 {
 	parse_top_level_exports(ast);
 	parse_top_level_imports(ast);
@@ -33,21 +39,21 @@ void parse_top_level(hkc::Ast_ptr& ast)
 	parse_top_level_function(ast);
 }
 
-void parse_top_level_exports(hkc::Ast_ptr& ast)
+void parse_top_level_exports(hkc::Ast_sptr& ast)
 {
 	
 }
 
-void parse_top_level_imports(hkc::Ast_ptr& ast)
+void parse_top_level_imports(hkc::Ast_sptr& ast)
 {}
 
-void parse_top_level_config(hkc::Ast_ptr& ast)
+void parse_top_level_config(hkc::Ast_sptr& ast)
 {}
 
-void parse_top_level_typesig(hkc::Ast_ptr& ast)
+void parse_top_level_typesig(hkc::Ast_sptr& ast)
 {}
 
-void parse_top_level_function(hkc::Ast_ptr& ast)
+void parse_top_level_function(hkc::Ast_sptr& ast)
 {}
 
 

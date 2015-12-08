@@ -1,26 +1,81 @@
 #include "hkc/lex.h"
 
+#include <fstream>
 #include <iostream>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
+#include <boost/tokenizer.hpp>
 
-static std::shared_ptr<hkc::lex::Token_Vector> tokenize(const std::string& src);
-static void eraseComments(hkc::lex::Token_Vector& tokens);
-
-std::shared_ptr<hkc::lex::Token_Vector> hkc::lex::lex(const std::string& src_txt)
+static void lex_stream(std::ifstream& src_file_in, hkc::ast::Module& module)
 {
-	auto tokens = tokenize(src_txt);
-	eraseComments(*tokens);
-	return tokens;
+	std::string src_line;
+	int line_num = 1;
+
+	while (std::getline(src_file_in, src_line))
+	{
+		std::vector<std::string> line_toks;
+		
+		int scope_num = src_line.size();
+		boost::trim_left(src_line);
+		scope_num -= src_line.size();
+
+		// Matches tokens to regex patterns,
+		// organized by order of precedence.
+		std::string char_lit_regex = "'([^'\\\\]|\\\\.)*'";
+		std::string string_lit_regex = "\"([^\"\\\\]|\\\\.)*\"";
+		std::string single_line_comment = "//.*\n";
+		std::string multi_line_comment = "/\\**\\*/";
+		std::string paren_regex = "[\\(\\)]{1}";
+		std::string word_regex = "[A-Za-z0-9_]+'*";
+		std::string symbol_regex = "[!\"#$%&'*+,-./\\\\:;<=>?@[\\\]^_`{|}~]+";
+		
+		boost::regex re(single_line_comment + "|" + multi_line_comment + "|" + char_lit_regex + "|" + string_lit_regex + "|" + paren_regex + "|" + word_regex + "|" + symbol_regex);
+		boost::sregex_token_iterator line_iter(src_line.begin(), src_line.end(), re, 0);
+		boost::sregex_token_iterator end_iter;
+
+		int line_tok_num = 1;
+
+		while (line_iter != end_iter)
+		{
+			auto tok = std::make_shared<hkc::lex::Token>();
+			tok->tok = line_iter->str();
+			tok->tok_num = module.tokens->size();
+			tok->line_num = line_num;
+			tok->line_tok_num = line_tok_num;
+			tok->scope_num = scope_num;
+
+			module.tokens->push_back(tok);
+
+			++line_tok_num;
+			++line_iter;
+		}
+
+		++line_num;
+	}
 }
 
-std::shared_ptr<hkc::lex::Token_Vector> hkc::lex::lex(std::istream& src_txt_in)
+hkc::ast::Module_Vector_sptr hkc::lex::lex(std::vector<std::string> src_files)
 {
-	std::string src_txt;
-	std::getline(src_txt_in, src_txt, (char)EOF);
-	return lex(src_txt);
+	auto modules = std::make_shared<hkc::ast::Module_Vector>();
+
+	for (auto src_file : src_files)
+	{
+		// Open stream to tokens
+		std::ifstream src_file_in(src_file, std::ifstream::binary);
+
+		hkc::ast::Module_sptr module = std::make_shared<ast::Module>();
+		module->file_path = src_file;
+		modules->push_back(module);
+
+		lex_stream(src_file_in, *module);
+		src_file_in.close();
+	}
+
+	return modules;
 }
 
-void hkc::lex::debug(const Token_Vector& tokens)
+/*void hkc::lex::debug(const Token_Vector& tokens)
 {
   std::cout << "Lexer produced the following tokens at the given line number - scope..." << std::endl;
   for(auto token : tokens)
@@ -30,132 +85,4 @@ void hkc::lex::debug(const Token_Vector& tokens)
 		<< " - " << "(" << token->get_scope() << "," << token->get_scope_index()
 		<< ": " << token->getId() << std::endl;
   }
-}
-
-
-// This whole thing is NASTY! Can I put this all into a throw-away class?
-static std::shared_ptr<hkc::lex::Token_Vector> tokenize(const std::string& src)
-{
-  auto tokens = std::make_shared<hkc::lex::Token_Vector>();
-
-  std::string tok_acc;
-  char delim = ' ';
-
-  int line_num = 1;
-  int line_index = 0;
-
-  int previous_scope = 0;
-  int scope = 0;
-  int scope_index = 0;
-
-  bool mustCountScope = true;
-  bool is_building_token = false;
-
-  int start_token = 0;
-  int end_token = 0;
-
-  for(auto i = 0; i < src.size(); i++)
-  {
-    auto curr_tok = src[i];
-
-    if(curr_tok == '\n')
-    {
-      if(is_building_token)
-      {
-		  ++line_index;
-		++scope_index;
-		tokens->push_back(std::make_shared<hkc::lex::Token>(tok_acc, line_num, line_index, scope, scope_index));
-        tok_acc.clear();
-		is_building_token = false;
-      }
-
-      ++line_num;
-	  line_index = 0;
-	  previous_scope = scope;
-      scope = 0;
-      mustCountScope = true;
-    }
-    else if(curr_tok != delim)
-    {
-      // create token, add to tokens
-      tok_acc += curr_tok;
-	  is_building_token = true;
-
-	  if(mustCountScope)
-	  {
-		  mustCountScope = false;
-		  if(scope >= previous_scope)
-		  {
-			  scope_index = 0;
-		  }
-	  }
-	  
-    }
-    else if(curr_tok == delim)
-    {
-		if(is_building_token)
-		{
-			++scope_index;
-			++line_index;
-			tokens->push_back(std::make_shared<hkc::lex::Token>(tok_acc, line_num, line_index, scope, scope_index));
-			tok_acc.clear();
-			is_building_token = false;
-		}
-
-      if(mustCountScope)
-      {
-        ++scope;
-      }
-    }
-  }
-
-  return tokens;
-}
-
-static void eraseSingleLineComment(hkc::lex::Token_Vector& tokens, const int& start_index)
-{
-  int comment_line_num = tokens[start_index]->get_line_num();
-  auto start_comment = tokens.begin() + start_index;
-  int token_index = start_index;
-
-  while( (token_index < tokens.size())
-      && (comment_line_num == tokens[token_index]->get_line_num()))
-  { ++token_index; }
-
-  auto end_comment = tokens.begin() + token_index;
-
-  tokens.erase(start_comment, end_comment);
-}
-
-static void eraseMultiLineComment(hkc::lex::Token_Vector& tokens, const int& start_index)
-{
-  auto start_comment = tokens.begin() + start_index;
-  int token_index = start_index;
-
-  while( (token_index < tokens.size())
-      && (tokens[token_index]->getId() != "*/"))
-  { ++token_index; }
-
-  auto end_comment = tokens.begin() + token_index + 1;
-
-  tokens.erase(start_comment, end_comment);
-}
-
-static void eraseComments(hkc::lex::Token_Vector& tokens)
-{
-  for(int token_index = 0; token_index < tokens.size(); token_index++)
-  {
-    auto token_id = tokens[token_index]->getId();
-
-    if(token_id == "//")
-    {
-      eraseSingleLineComment(tokens, token_index);
-      --token_index;
-    }
-    else if (token_id == "/*")
-    {
-      eraseMultiLineComment(tokens, token_index);
-      --token_index;
-    }
-  }
-}
+}*/

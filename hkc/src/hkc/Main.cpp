@@ -19,6 +19,9 @@ int main(int argc, char* argv[])
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
 
+	// create build
+	// parse build commands
+
 	if (argc == 1)
 	{
 		std::cout << "Compiling..." << "\n";
@@ -36,5 +39,7 @@ int main(int argc, char* argv[])
 		std::cout << desc << "\n";
 		return 0;
 	}
+
+	// compile the given build and return
 }
 

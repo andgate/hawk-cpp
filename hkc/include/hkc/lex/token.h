@@ -8,31 +8,18 @@ namespace hkc
 {
 	namespace lex
 	{
-		class Token
+		struct Token
 		{
-		public:
-			Token(const std::string& tok, int line_num, int m_line_index, int scope, int scope_index);
-			Token(const Token& rhs);
-			Token(Token&& rhs);
-
-			Token& operator=(const Token& rhs);
-			Token& operator=(Token&& rhs);
-
-			std::string getId();
-			int get_line_num();
-			int get_line_index();
-			int get_scope();
-			int get_scope_index();
-
-		private:
-			std::string m_idStr;
-			int m_line_num;
-			int m_line_index;
-			int m_scope;
-			int m_scope_index;
+			std::string tok;
+			int tok_num;
+			int line_num;
+			int line_tok_num;
+			int scope_num;
 		};
 
+		typedef std::shared_ptr<Token> Token_sptr;
+
 		typedef std::vector<std::shared_ptr<Token>> Token_Vector;
-		typedef std::shared_ptr<Token_Vector> Token_Vector_Shared;
+		typedef std::shared_ptr<Token_Vector> Token_Vector_sptr;
 	}
 }

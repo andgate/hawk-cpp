@@ -1,19 +1,17 @@
 #pragma once
 
-#include "hkc/lex/token.h"
+#include "ast/module.h"
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace hkc
 {
 
 	namespace lex
 	{
-		void debug(const Token_Vector&);
-
-		std::shared_ptr<lex::Token_Vector> lex(std::istream&);
-		std::shared_ptr<lex::Token_Vector> lex();
-		lex::Token_Vector_Shared lex(const std::string&);
+		hkc::ast::Module_Vector_sptr lex(std::vector<std::string> src_files);
+		//void debug(const Token_Vector&);
 	}
 }

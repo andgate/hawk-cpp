@@ -1,7 +1,5 @@
 #pragma once
 
-#include "hkc/ast/expr.h"
-#include "hkc/ast/unparsed_expr.h"
 #include "hkc/ast/module.h"
 
 #include <vector>
@@ -17,6 +15,7 @@ namespace hkc
 	};
 
 	typedef std::unique_ptr<Ast> Ast_ptr;
+	typedef std::shared_ptr<Ast> Ast_sptr;
 }
 
 /*

@@ -7,5 +7,5 @@
 
 namespace hkc
 {
-	Ast_ptr parse(ast::Module_Vector_Shared modules);
+	Ast_sptr parse(ast::Module_Vector_sptr modules);
 }

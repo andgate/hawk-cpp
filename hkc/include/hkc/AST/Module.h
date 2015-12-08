@@ -16,17 +16,20 @@ namespace hkc
 	{
 		struct Module
 		{
-			std::string m_file_path;
-			lex::Token_Vector_Shared m_tokens;
-			std::vector<boost::any> m_asts;
+			std::string file_path = "";
+			lex::Token_Vector_sptr tokens = std::make_shared<hkc::lex::Token_Vector>();
+			std::vector<boost::any> asts = std::vector<boost::any>();
 
-			std::vector<Module> m_imports;
-			std::vector<std::string> m_exports;
+			std::vector<Module> imports;
+			std::vector<std::string> exports;
 
-			std::map<std::string, std::vector<Symbol>> m_sym_table;
+			std::map<std::string, std::vector<Symbol>> symbol_table;
 		};
 
-		typedef std::vector<std::unique_ptr<Module>> Module_Vector;
-		typedef std::shared_ptr<Module_Vector> Module_Vector_Shared;
+		typedef std::unique_ptr<Module> Module_ptr;
+		typedef std::shared_ptr<Module> Module_sptr;
+
+		typedef std::vector<Module_sptr> Module_Vector;
+		typedef std::shared_ptr<Module_Vector> Module_Vector_sptr;
 	}
 }
