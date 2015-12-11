@@ -21,9 +21,7 @@ set (NEST_HEADERS
 )
 
 set (EXTRA_SOURCES
-  src/jsoncpp.cpp
-  include/json/json.h
-  include/json/json-forwards.h
+  include/SipYAML.hpp
 )
 
 PREPEND(NEST_SOURCES src/nest ${NEST_SOURCES})

@@ -20,8 +20,8 @@ namespace hkc
 			lex::Token_Vector_sptr tokens = std::make_shared<hkc::lex::Token_Vector>();
 			std::vector<boost::any> asts = std::vector<boost::any>();
 
-			std::vector<Module> imports;
-			std::vector<std::string> exports;
+			std::vector<std::string> imports = std::vector<std::string>();
+			std::vector<std::string> exports = std::vector<std::string>();
 
 			std::map<std::string, std::vector<Symbol>> symbol_table;
 		};

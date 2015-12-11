@@ -11,7 +11,7 @@ char TYPEDEC_SYMBOL = ':';
 char DEC_SYMBOL = '=';
 
 static void parse_top_level(hkc::Ast_sptr& ast);
-static void parse_top_level_exports(hkc::Ast_sptr& ast);
+static void parse_top_level_module(hkc::ast::Module_sptr ast);
 static void parse_top_level_imports(hkc::Ast_sptr& ast);
 static void parse_top_level_config(hkc::Ast_sptr& ast);
 static void parse_top_level_typesig(hkc::Ast_sptr& ast);
@@ -32,12 +32,56 @@ hkc::Ast_sptr hkc::parse(ast::Module_Vector_sptr modules)
 // and symbol table.
 void parse_top_level(hkc::Ast_sptr& ast)
 {
-	parse_top_level_exports(ast);
-	parse_top_level_imports(ast);
-	parse_top_level_config(ast);
-	parse_top_level_typesig(ast);
-	parse_top_level_function(ast);
+	for(auto module : ast->modules)
+	{
+		parse_top_level_module(module);
+	}
 }
+
+
+std::string parse_module_name(hkc::lex::Token_Vector_sptr& tokens, int token_i, hkc::lex::Token_sptr& token)
+{
+	std::string module_name;
+	auto curr_token = (*tokens)[token_i];
+	
+	while(curr_token)
+	{
+		
+	}
+
+	
+	return module_name;
+}
+
+void parse_top_level_module(hkc::ast::Module_sptr module)
+{
+	auto tokens = module->tokens;
+	for (int token_i = 0; token_i < tokens->size(); token_i++)
+	{
+		auto key_token = (*tokens)[token_i];
+
+		if(key_token->tok == "<")
+		{
+			int line_num = key_token->line_num;
+			int scope = key_token->scope_num;
+
+			tokens->erase(tokens->begin() + token_i);
+
+			auto curr_token = (*tokens)[token_i];
+			while (key_token->line_num == curr_token->line_num
+				|| key_token->scope_num < curr_token->scope_num);
+			{
+				if(curr_token->tok != ".")
+				{
+					auto export_name = parse_module_name(tokens, token_i, key_token);
+					module->exports.push_back(export_name);
+				}
+			}
+			
+		}
+	}
+}
+
 
 void parse_top_level_exports(hkc::Ast_sptr& ast)
 {
