@@ -1,8 +1,8 @@
 #include "nest/gen_build.h"
 
-std::unique_ptr<hkc::Build> Nest::gen_build(Config_ptr& nest_conf)
+hkc::Build_ptr Nest::gen_build(Config_ptr nest_conf)
 {
-	auto build_ptr = std::make_unique<hkc::Build>();
+    auto build_ptr = std::make_shared<hkc::Build>();
 
 	// setup build from config
 

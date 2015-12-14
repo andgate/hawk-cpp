@@ -24,18 +24,17 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Building project..." << "\n";
 
-		// 1. Find config file
-		// 2. Load config with path
-		// 3. generate build command with config
-		auto hkc_build =
-			Nest::gen_build(		// 3
-				Nest::load(			// 2
-					Nest::find()	// 1
-					)
-				)
-			;
-		// 4. Call out to hkc compiler with the build command
-		hkc::compile(hkc_build);
+        // 1. Find config file
+        // 2. Load config with path
+        // 3. generate build command with config
+        // 4. Call out to hkc compiler with the build command
+        hkc::compile(
+            Nest::gen_build(		// 3
+                Nest::load(			// 2
+                    Nest::find()	// 1
+                    )
+                )
+            );
 
 		return 0;
 	}

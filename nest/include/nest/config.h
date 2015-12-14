@@ -20,5 +20,5 @@ namespace Nest
 	};
 
 	typedef std::vector<Config> Configs;
-	typedef std::unique_ptr<Config> Config_ptr;
+    typedef std::shared_ptr<Config> Config_ptr;
 }

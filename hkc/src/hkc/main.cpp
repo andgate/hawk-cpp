@@ -26,10 +26,10 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Compiling..." << "\n";
 
-		auto build_ptr = std::make_unique<hkc::Build>();
-		build_ptr->src_files.push_back("main.hk");
+        auto build = std::make_shared<hkc::Build>();
+        build->src_files.push_back("main.hk");
 
-		hkc::compile(build_ptr);
+        hkc::compile(build);
 
 		return 0;
 	}

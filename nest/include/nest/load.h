@@ -1,5 +1,4 @@
-#include "nest/Config.h"
-
+#include "nest/config.h"
 #include <string>
 
 namespace Nest

@@ -7,5 +7,5 @@
 
 namespace hkc
 {
-	void compile(std::unique_ptr<Build>& build);
+    void compile(Build_ptr build);
 }

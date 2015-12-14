@@ -4,14 +4,14 @@
 #include "hkc/lex.h"
 #include "hkc/ast/module.h"
 
-void hkc::compile(std::unique_ptr<Build>& build)
+void hkc::compile(Build_ptr build)
 {
 	// ----------------
 	// Compiler Process
 	// ----------------
 
 	// 1. Loop through and lex each file in the build.
-	auto modules = hkc::lex::lex(build->src_files);
+    auto modules = hkc::lex::lex(build->src_files);
 
 	// 2. Parse the resulting module list.
 	auto build_ast = parse(modules);

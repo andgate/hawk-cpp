@@ -1,12 +1,12 @@
 #pragma once
 
-#include "nest/Config.h"
+#include "nest/config.h"
 
-#include <hkc/Build.h>
+#include <hkc/build.h>
 
 #include <memory>
 
 namespace Nest	
 {
-	std::unique_ptr<hkc::Build> gen_build(Config_ptr& nest_conf);
+    hkc::Build_ptr gen_build(Config_ptr nest_conf);
 }
