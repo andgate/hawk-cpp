@@ -29,7 +29,13 @@ if(Boost_FOUND)
   link_libraries(${Boost_LIBRARIES})
 endif()
 
-find_package(yaml-cpp)
+
+include(FindPkgConfig)
+pkg_check_modules(yaml-cpp REQUIRED yaml-cpp>=0.2.5)
+if(yaml-cpp_FOUND)
+  include_directories(${yaml-cpp_INCLUDE_DIRS})
+  link_directories(${yaml-cpp_LIBRARY_DIRS})
+endif()
 
 # include the subdirectory containing core library and programs
 subdirs(hkc nest)

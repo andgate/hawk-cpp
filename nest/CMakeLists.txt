@@ -21,14 +21,13 @@ set (NEST_HEADERS
 )
 
 set (EXTRA_SOURCES
-  include/SipYAML.hpp
 )
 
 PREPEND(NEST_SOURCES src/nest ${NEST_SOURCES})
 PREPEND(NEST_HEADERS include/nest ${NEST_HEADERS})
 
 add_executable(nest ${NEST_SOURCES} ${NEST_HEADERS} ${EXTRA_SOURCES})
-target_link_libraries(nest hkclib)
+target_link_libraries(nest hkclib ${yaml-cpp_LIBRARIES})
 
 if ( CMAKE_COMPILER_IS_GNUCC )
     # This is tested
