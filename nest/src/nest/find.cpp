@@ -18,6 +18,8 @@ std::string Nest::find(const std::string& nest_base_path_str)
 	{
 		auto nest_base_path = fs::path(nest::resolve_path(nest_base_path_str));
 
+		std::cout << "Searching for nest in: " << nest_base_path.c_str() << std::endl;
+
 		// resolve_path gaurentees existence.
 		/*if (!fs::exists(nest_base_path))
 		{
@@ -54,6 +56,8 @@ std::string Nest::find(const std::string& nest_base_path_str)
 	{
 		std::cout << ex.what() << std::endl;
 	}
+
+	std::cout << "Found nest: " << conf_filename << std::endl;
 
 	return conf_filename;
 }

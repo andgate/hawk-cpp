@@ -24,8 +24,17 @@ Nest::Config_ptr Nest::load(const std::string& config_path_str)
 	config->project_file = config_path_str;
 
 	YAML::Node node = YAML::Load(config_txt.c_str());
-	config->name = node["name"].as<std::string>();
-	config->dirs.push_back(node["dirs"].as<std::string>());
+	config->name = node["project"].as<std::string>();
+
+	/*if(node["dirs"].IsSequence())
+	{
+		// grab the list
+	}
+	else
+	{
+		config->dirs.push_back(node["dirs"].as<std::string>());
+	}*/
+
 	config->files.push_back(node["files"].as<std::string>());
 
 	/*for (auto src_dir : root["dirs"])

@@ -17,9 +17,6 @@ namespace nest
 		boost::filesystem::path p(p_str);
 		boost::filesystem::path base(base_str);
 
-		//boost::filesystem::path result(canonical(p, base));
-		boost::filesystem::path result;
-
 		try
 		{
 			if (base.is_relative())
@@ -45,7 +42,7 @@ namespace nest
 		}
 
 
-		return result.string();
+		return p.string();
 	}
 
 }
