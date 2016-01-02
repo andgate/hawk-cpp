@@ -20,7 +20,7 @@ static void parse_top_level_function(hkc::Ast_sptr& ast);
 hkc::Ast_sptr hkc::parse(ast::Module_Vector_sptr modules)
 {
 	auto module_ast = std::make_shared<Ast>();
-	
+
 	module_ast->modules = *modules;
 
 	parse_top_level(module_ast);
@@ -43,13 +43,13 @@ std::string parse_module_name(hkc::lex::Token_Vector_sptr& tokens, int token_i, 
 {
 	std::string module_name;
 	auto curr_token = (*tokens)[token_i];
-	
+
 	while(curr_token)
 	{
-		
+
 	}
 
-	
+
 	return module_name;
 }
 
@@ -77,7 +77,7 @@ void parse_top_level_module(hkc::ast::Module_sptr module)
 					module->exports.push_back(export_name);
 				}
 			}
-			
+
 		}
 	}
 }
@@ -85,7 +85,7 @@ void parse_top_level_module(hkc::ast::Module_sptr module)
 
 void parse_top_level_exports(hkc::Ast_sptr& ast)
 {
-	
+
 }
 
 void parse_top_level_imports(hkc::Ast_sptr& ast)

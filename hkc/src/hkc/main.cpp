@@ -26,10 +26,10 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "Compiling..." << "\n";
 
-        auto build = std::make_shared<hkc::Build>();
-        build->src_files.push_back("main.hk");
+    auto build = std::make_shared<hkc::Build>();
+    build->src_files.push_back("main.hk");
 
-        hkc::compile(build);
+    hkc::compile(build);
 
 		return 0;
 	}
@@ -42,4 +42,3 @@ int main(int argc, char* argv[])
 
 	// compile the given build and return
 }
-

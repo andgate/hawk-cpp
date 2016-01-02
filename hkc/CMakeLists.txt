@@ -1,29 +1,20 @@
 include_directories(${Hawk_SOURCE_DIR}/hkc/include)
 
 set (HKC_LIB_SOURCES
-  compile.cpp
-  ast.cpp
-  ast/module.cpp
-  ast/expr.cpp
-  ast/unparsed_expr.cpp
   build.cpp
-  parse.cpp
+  compile.cpp
   symbol.cpp
-  lex.cpp
-  lex/token.cpp
+  parser/Parser.cpp
+  parser/Lexer.cpp
 )
 
 set (HKC_LIB_HEADERS
-  compile.h
-  ast.h
-  ast/module.h
-  ast/expr.h
-  ast/unparsed_expr.h
   build.h
-  parse.h
+  compile.h
   symbol.h
-  lex.h
-  lex/token.h
+  parser/Parser.h
+  parser/Lexer.h
+  utils/ReadFile.h
 )
 
 set (HKC_BIN_SOURCES

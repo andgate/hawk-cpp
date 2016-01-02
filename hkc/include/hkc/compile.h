@@ -7,5 +7,5 @@
 
 namespace hkc
 {
-    void compile(Build_ptr build);
+  void compile(Build_ptr build);
 }

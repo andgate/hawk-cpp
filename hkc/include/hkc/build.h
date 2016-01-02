@@ -12,6 +12,6 @@ namespace hkc
 		std::vector<std::string> src_files;
 	};
 
-    typedef std::shared_ptr<Build> Build_ptr;
+	typedef std::shared_ptr<Build> Build_ptr;
 
 }

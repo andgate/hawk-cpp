@@ -1,7 +1,7 @@
 #pragma once
 
-#include "hkc/ast.h"
-#include "hkc/ast/module.h"
+#include "hkc/parser/ast.h"
+#include "hkc/parser/ast/module.h"
 
 #include <memory>
 
