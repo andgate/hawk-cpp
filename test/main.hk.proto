@@ -1,37 +1,10 @@
-// This exports the code in this file as the module "Test"
 < Test
 
-// Everything in a namespace needs to be indented
 namespace_1:
-  test :: void :=
+  test :: () :=
     print "Hello from namespace1"
+// No longer inside namespace1
 
-    
-// This is an enum definition
-// The lexer will attempt to parse types as
-// either objects or enums
-// Notice that case of the type doesn't matter, unlike some other languages.
-colors :- Red | Blue | Green
-
-Maybe a :- Nothing | Just a
-
-Bool :- True | False
-
-// Set the options for the following defition (in this case, add)
-@ start // Declares add as an entry point. When compiled, will produce a binary that starts here.
-// This is a function definition
-// Function definitions can have an optional type signature
-// Types can be declared constant with a bang prepended.
-// Pointers can prepended to the start as well, and work just like c pointers.
-add x y :: !i32 -> !i32 -> !i32 :=
-    z : Int // Delcares z, defaults to 0
-    z = x + y // This allows z to be set to a given rvalue.
-    // If multiple statements were used, a call to return is required.
-
-    z : Int := x + y // Shadows previous z with a new declaration
-    return z // control-flow statements like return are employed.
-    
-/* Long comment, disable object definitions for now
 
 // This is an object definition
 SomeData :-
@@ -79,5 +52,24 @@ MyData <- SomeData :-
     @Override
     foo x :=
         b += x
-*/
+    
+    
+// This is an enum definition
+// The lexer will attempt to parse types as
+// either objects or enums
+// Notice that case of the type doesn't matter, unlike some other languages.
+colors :- Red | Blue | Green
+    
+@ start // Declares add as an entry point. When compiled, will produce a binary that starts here.
+// This is a function definition
+// Function definitions can have an optional type signature
+// Types can be declared constant with a bang prepended.
+// Pointers can prepended to the start as well, and work just like c pointers.
+add x y :: !i32 -> !i32 -> !i32 :=
+  z : Int // Delcares z, defaults to 0
+  z = x + y // This allows z to be set to a given rvalue.
+  // If multiple statements were used, a call to return is required.
+  
+  z : Int := x + y // Shadows previous z with a new declaration
+  return z // control-flow statements like return are employed.
 
