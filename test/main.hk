@@ -1,0 +1,62 @@
+< Test
+
+namespace_1:
+  test :: () :=
+    print "Hello from namespace1"
+// No longer inside namespace1
+
+
+// This is an object
+SomeData :-
+// Set access 
+@private:
+    // Struct containing data
+    a :: Int := 32 // Defaults to 32
+    
+    // Defines a getter and setter for the field
+    @ get set
+    c :: String // Defaults to empty string
+        // creates a public setter for c
+        set c := return this.c + "\n"
+        // Uses the default, public getter for c
+    
+    @protected // Specific access for a field
+    b :: Int // Defaults to default int, which is 0
+    
+@public:
+    // Constructors are special!
+    // Data can be initialized in a constructor, but only once!
+    // Order of initialization is determined from constructor
+    SomeData a b c :=
+        this.a := a
+        this.b := b
+        this.c := c
+        
+        // Do some extra construction work
+        this.y += z.size
+        
+    // Destructors are called when an object is deallocated
+    //~SomeData :=
+    //
+    
+    // Undefined functions are considered abstract
+    @ abstract // Forces abstract function check
+    foo a :: !Int -> ()
+    
+MyData < SomeData :-
+    @Override
+    foo x :=
+        b += x
+    
+    
+// This creates an enum
+Colors :- Red | Blue | Green
+    
+@ start
+add x y :: !Int32 -> !Int32 -> !Int32
+  z : Int // Creates a z, defaults to Int
+  z = x + y
+  
+  z : Int := x + y // Shadows previous Z, creates an x+y
+  return z
+
