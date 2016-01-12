@@ -1,19 +1,19 @@
 include_directories(${Hawk_SOURCE_DIR}/hkc/include)
 
+BISON_TARGET(Parser parser.yy ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp)
+FLEX_TARGET(Scanner scanner.ll ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
+ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 set (HKC_LIB_SOURCES
-  build.cpp
   compile.cpp
-  symbol.cpp
-  parser/Parser.cpp
-  parser/Lexer.cpp
+  parser/driver.cpp
 )
 
 set (HKC_LIB_HEADERS
   build.h
   compile.h
-  symbol.h
-  parser/Parser.h
-  parser/Lexer.h
+  parser/driver.h
   utils/ReadFile.h
 )
 
@@ -30,7 +30,7 @@ PREPEND(HKC_LIB_HEADERS include/hkc ${HKC_LIB_HEADERS})
 PREPEND(HKC_BIN_SOURCES src/hkc ${HKC_BIN_SOURCES})
 PREPEND(HKC_BIN_HEADERS include/hkc ${HKC_BIN_HEADERS})
 
-add_library (hkclib STATIC ${HKC_LIB_SOURCES} ${HKC_LIB_HEADERS})
+add_library (hkclib STATIC ${HKC_LIB_SOURCES} ${HKC_LIB_HEADERS} ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS})
 add_executable(hkc ${HKC_BIN_SOURCES} ${HKC_BIN_HEADERS})
 target_link_libraries(hkc hkclib)
 

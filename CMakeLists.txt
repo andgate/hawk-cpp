@@ -7,7 +7,23 @@ set (Hawk_VERSION_MINOR 0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
+find_package(LLVM REQUIRED)
+
+if( NOT LLVM_FOUND )
+  message(FATAL_ERROR "LLVM package can't be found. Set CMAKE_PREFIX_PATH variable to LLVM's installation prefix.")
+endif()
+
+include_directories( ${LLVM_INCLUDE_DIRS} )
+link_directories( ${LLVM_LIBRARY_DIRS} )
+
+#llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES native)
+llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES native)
+
 
 # boost
 #set(Boost_NO_SYSTEM_PATHS true)

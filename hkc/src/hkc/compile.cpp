@@ -1,7 +1,8 @@
 #include "hkc/compile.h"
 
-#include "hkc/parse.h"
-#include "hkc/parser/Lexer.h"
+#include "hkc/parser/driver.h"
+
+#include <iostream>
 
 void hkc::compile(Build_ptr build)
 {
@@ -9,8 +10,19 @@ void hkc::compile(Build_ptr build)
 	// Compiler Process
 	// ----------------
 
+    hawk_driver driver;
+    driver.trace_parsing = true;
+    driver.trace_scanning = true;
+    
+    for(std::string src_path : build->src_files)
+    {
+        if(!driver.parse(src_path))
+        { 
+            std::cout << driver.result << std::endl;
+        }
+    }
+    
   // 1. Lex tokens
-  auto lexer = hkc::lex_files(build->src_files);
 
   // 2. Parse the token sets into an abstract syntax tree.
 	//auto build_ast = parse(modules);
