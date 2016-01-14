@@ -12,19 +12,22 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-find_package(LLVM REQUIRED)
+find_package(LLVM REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 if( NOT LLVM_FOUND )
   message(FATAL_ERROR "LLVM package can't be found. Set CMAKE_PREFIX_PATH variable to LLVM's installation prefix.")
 endif()
 
 include_directories( ${LLVM_INCLUDE_DIRS} )
-link_directories( ${LLVM_LIBRARY_DIRS} )
+add_definitions( ${LLVM_DEFINITIONS} )
 
-#llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES native)
-llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES native)
+llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES all)
+link_libraries(${REQ_LLVM_LIBRARIES})
 
-
+  
 # boost
 #set(Boost_NO_SYSTEM_PATHS true)
 #set (Boost_USE_STATIC_LIBS OFF)
