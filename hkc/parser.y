@@ -8,8 +8,8 @@
 %code requires
 {
 
-# include <string>
-# include <vector>
+#include <vector>
+#include <memory>
 class hawk_driver;
 
 class CodeGenContext;
@@ -18,10 +18,14 @@ class NExpression;
 class NIdentifier;
 class NBlock;
 
-typedef std::vector<NStatement*> StatementList;
-typedef std::vector<NExpression*> ExpressionList;
-typedef std::vector<NIdentifier*> VariableList;
-typedef std::vector<NIdentifier*> TypeList;
+typedef std::shared_ptr<NBlock> block;
+typedef std::shared_ptr<NStatement> stmt;
+typedef std::shared_ptr<NIdentifier> ident;
+typedef std::shared_ptr<NExpression> expr;
+
+typedef std::vector<std::shared_ptr<NStatement>> StatementList;
+typedef std::vector<std::shared_ptr<NExpression>> ExpressionList;
+typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
 }
 // The parsing context.
@@ -39,10 +43,13 @@ typedef std::vector<NIdentifier*> TypeList;
 {
 # include "hkc/parser/driver.h"
 # include "hkc/parser/node.h"
+
+# include <string>
 }
 %define api.token.prefix {TOK_}
 %token
   END  0  "end of file"
+  SEMICOLON ";"
   COLON   ":"
   EXCLAIM "!"
   FUNDEC  ":="
@@ -61,76 +68,76 @@ typedef std::vector<NIdentifier*> TypeList;
   RETURN  "return"
 ;
 %token <std::string> IDENT
-%token <long int>    INTEGER
+%token <long long>    INTEGER
 %token <long double> DOUBLE
 %token <std::string> STRING
-%printer { yyoutput << $$; } <*>;
+%printer { yyoutput << (&$$); } <*>;
 
 
-%type <NBlock*> module stmts block
-%type <NStatement*> stmt func_decl
-%type <NIdentifier*> ident
-%type <NExpression*> numeric expr
-%type <VariableList*> func_decl_args type_sig
-%type <ExpressionList*> call_args
+%type <block> module top_stmts block stmts
+%type <stmt> top_stmt stmt func_decl
+%type <ident> ident
+%type <expr> numeric expr
+%type <ExpressionList> call_args
+%type <IdentList> func_header type_sig
 
 %%
 
 
 %start module;
 module : %empty { driver.result = NULL; }
-       | stmts  { driver.result = $1; }
+       | top_stmts  { driver.result = $1; }
        ;
-
-stmts : stmt       { $$ = new NBlock(); $$->statements.push_back($<NStatement*>1); }
-      | stmts stmt { $1->statements.push_back($<NStatement*>1); }
-      ;
-
-stmt : func_decl
-     | expr ";"        { $$ = new NExpressionStatement(*$1); }
-     | RETURN expr ";" { $$ = new NReturnStatement(*$<NExpression*>2);    }
-     ;
-     
-block : LCURLY stmts RCURLY { $$ = $2; }
-      | LCURLY RCURLY       { $$ = new NBlock(); }
-      ;
-      
-func_decl : ident func_decl_args ":=" block
-            { $$ = new NFunctionDeclaration(*$1, *$2, *$4); }
-          | ident func_decl_args ":" type_sig ":=" block
-            { $$ = new NFunctionDeclaration(*$1, *$2, *$6, *$4); }
+       
+top_stmts : top_stmt           { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<stmt>1); }
+          | top_stmts top_stmt { $1->statements.push_back($<stmt>1); }
           ;
 
-func_decl_args : %empty      { $$ = new VariableList(); }
-               | ident       { $$ = new VariableList(); $$->push_back($<NIdentifier*>1); }
-               | func_decl_args ident
-                 { $1->push_back($<NIdentifier*>2); }
-               ;
+top_stmt : func_decl;
+          
+stmts : stmt       { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<stmt>1); }
+      | stmts stmt { $1->statements.push_back($<stmt>1); }
+      ;
+
+stmt : expr ";"        { $$ = std::make_shared<NExpressionStatement>($1);}
+     | RETURN expr ";" { $$ = std::make_shared<NReturnStatement>($<expr>2); }
+     ;
+     
+block : LCURLY RCURLY       { $$ = std::make_shared<NBlock>(); }
+      | LCURLY stmts RCURLY { $$ = $2; }
+      ;      
+      
+func_decl : func_header ":" type_sig ":=" block { $$ = std::make_shared<NFunctionDeclaration>($1, $5, $3); }
+          | func_header ":=" block              { $$ = std::make_shared<NFunctionDeclaration>($1, $3); }
+          ;
+
+func_header : ident             { $$ = IdentList(); $$.push_back($<nident>1); }
+            | func_header ident { $1.push_back($<nident>2); }
+            ;
                
-type_sig : ident { $$ = new TypeList(); $$->push_back($1); }
-         | type_sig "->" ident { $1->push_back($3); }
+type_sig : ident               { $$ = IdentList(); $$.push_back($1); }
+         | type_sig "->" ident { $1.push_back($3); }
          ;
       
-ident : IDENT { $$ = new NIdentifier(*$<NIdentifier*>1); }
-      ;
+ident : IDENT { $$ = std::make_shared<NIdentifier>($1); };
       
-numeric : INTEGER { $$ = new NInteger($1); }
-        | DOUBLE  { $$ = new NDouble($1);  }
+numeric : INTEGER { $$ = std::make_shared<NInteger>($1); }
+        | DOUBLE  { $$ = std::make_shared<NDouble>($1);  }
         ;
 
-expr : ident "=" expr  { $$ = new NAssignment(*$<NIdentifier*>1, *$3); }
-     | ident           { $$ = new NFunctionCall(*$1); }
-     | ident call_args { $$ = new NFunctionCall(*$1, *$2); }
-     | numeric
-     | expr "*" expr { $$ = new NBinaryOperator(*$1, "*", *$3); }
-     | expr "/" expr { $$ = new NBinaryOperator(*$1, "/", *$3); }
-     | expr "+" expr { $$ = new NBinaryOperator(*$1, "+", *$3); }
-     | expr "-" expr { $$ = new NBinaryOperator(*$1, "-", *$3); }
+expr : ident "=" expr  { $$ = std::make_shared<NAssignment>($<nident>1, $3); }
+     | ident           { $$ = std::make_shared<NFunctionCall>($1); }
+     | ident call_args { $$ = std::make_shared<NFunctionCall>($1, $2); }
+     | numeric        { $$ = $1; }
+     | expr "*" expr { $$ = std::make_shared<NBinaryOperator>($1, "*", $3); }
+     | expr "/" expr { $$ = std::make_shared<NBinaryOperator>($1, "/", $3); }
+     | expr "+" expr { $$ = std::make_shared<NBinaryOperator>($1, "+", $3); }
+     | expr "-" expr { $$ = std::make_shared<NBinaryOperator>($1, "-", $3); }
      | "(" expr ")" { $$ = $2; }
      ;
 
-call_args : expr   { $$ = new ExpressionList; $$->push_back($1); }
-          | call_args expr { $1->push_back($2); }
+call_args : expr   { $$ = ExpressionList(); $$.push_back($1); }
+          | call_args expr { $1.push_back($2); }
           ;
      
 %%

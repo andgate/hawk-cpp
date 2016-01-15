@@ -1,8 +1,9 @@
 #ifndef HAWK_DRIVER_HH
 # define HAWK_DRIVER_HH
 
-# include <string>
-# include <map>
+#include <string>
+#include <map>
+#include <memory>
 
 #include "hkc/parser/node.h"
 
@@ -25,7 +26,7 @@ public:
     
     std::map<std::string, int> variables;
     
-    NBlock *result;
+    nblock result;
     
     // Handling the scanner.
     void scan_begin();

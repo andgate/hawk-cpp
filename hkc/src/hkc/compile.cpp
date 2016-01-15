@@ -1,8 +1,11 @@
 #include "hkc/compile.h"
 
+#include "hkc/codegen.h"
 #include "hkc/parser/driver.h"
 
 #include <iostream>
+
+class CodeGenContext;
 
 void hkc::compile(Build_ptr build)
 {
@@ -18,7 +21,12 @@ void hkc::compile(Build_ptr build)
     {
         if(!driver.parse(src_path))
         { 
-            std::cout << driver.result << std::endl;
+            auto programBlock = driver.result;
+            std::cout << &(driver.result) << std::endl;
+            
+            /*CodeGenContext context;
+            context.generateCode(*programBlock);
+            context.runCode();*/
         }
     }
     

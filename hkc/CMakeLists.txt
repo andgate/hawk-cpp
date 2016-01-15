@@ -1,6 +1,6 @@
 include_directories(${Hawk_SOURCE_DIR}/hkc/include)
 
-BISON_TARGET(Parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp)
+BISON_TARGET(Parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp [COMPILE_FLAGS -v])
 FLEX_TARGET(Scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
 ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})

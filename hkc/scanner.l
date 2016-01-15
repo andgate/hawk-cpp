@@ -47,6 +47,7 @@ unterminated_comment    [/][*]
 
 {blank}+    loc.step();
 [\n]+       loc.lines(yyleng); loc.step();
+";"         return yy::hawk_parser::make_SEMICOLON(loc);
 ":"         return yy::hawk_parser::make_COLON(loc);
 "!"         return yy::hawk_parser::make_EXCLAIM(loc);
 ":="        return yy::hawk_parser::make_FUNDEC(loc);
