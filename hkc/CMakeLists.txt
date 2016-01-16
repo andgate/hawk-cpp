@@ -15,6 +15,7 @@ set (HKC_LIB_HEADERS
   build.h
   compile.h
   codegen.h
+  NodePrinter.h
   parser/driver.h
   parser/node.h
   utils/ReadFile.h

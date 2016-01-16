@@ -1,6 +1,7 @@
 #include "hkc/compile.h"
 
 #include "hkc/codegen.h"
+#include "hkc/NodePrinter.h"
 #include "hkc/parser/driver.h"
 
 #include <iostream>
@@ -15,14 +16,17 @@ void hkc::compile(Build_ptr build)
 
     hawk_driver driver;
     driver.trace_parsing = true;
-    driver.trace_scanning = true;
+    driver.trace_scanning = false;
     
     for(std::string src_path : build->src_files)
     {
         if(!driver.parse(src_path))
         { 
             auto programBlock = driver.result;
-            std::cout << &(driver.result) << std::endl;
+            
+            NodePrinter printer;
+            
+            programBlock->accept(printer);
             
             /*CodeGenContext context;
             context.generateCode(*programBlock);

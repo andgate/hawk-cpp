@@ -12,6 +12,16 @@ class NStatement;
 class NExpression;
 class NIdentifier;
 class NBlock;
+class NInteger;
+class NDecimal;
+class NFunctionCall;
+class NBinaryOperator;
+class NAssignment;
+class NStatementExpression;
+class NExpressionStatement;
+class NReturnStatement;
+class NVariableDeclaration;
+class NFunctionDeclaration;
 
 typedef std::shared_ptr<NBlock> nblock;
 typedef std::shared_ptr<NStatement> nstmt;
@@ -22,30 +32,67 @@ typedef std::vector<std::shared_ptr<NStatement>> StatementList;
 typedef std::vector<std::shared_ptr<NExpression>> ExpressionList;
 typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
+class Visitor;
+
 class Node {
 public:
     virtual ~Node() {}
+    
+    virtual void accept(Visitor& v) = 0;
     virtual llvm::Value* codeGen(CodeGenContext& context) { }
 };
 
+class Visitor
+{
+public:
+    virtual void visit(NExpression& n) = 0;
+    virtual void visit(NStatement& n) = 0;
+    virtual void visit(NInteger& n) = 0;
+    virtual void visit(NDecimal& n) = 0;
+    virtual void visit(NIdentifier& n) = 0;
+    virtual void visit(NFunctionCall& n) = 0;
+    virtual void visit(NBinaryOperator& n) = 0;
+    virtual void visit(NAssignment& n) = 0;
+    virtual void visit(NBlock& n) = 0;
+    virtual void visit(NExpressionStatement& n) = 0;
+    virtual void visit(NStatementExpression& n) = 0;
+    virtual void visit(NReturnStatement& n) = 0;
+    virtual void visit(NVariableDeclaration& n) = 0;
+    virtual void visit(NFunctionDeclaration& n) = 0;
+};
+
 class NExpression : public Node {
+public:
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NStatement : public Node {
+public:
+    IdentList options;
+    
+    NStatement()
+    : options()
+    {}
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NInteger : public NExpression {
 public:
-    long long value;
-    NInteger(long long value) : value(value) { }
+    std::string value;
+    NInteger(std::string value) : value(value) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
-class NDouble : public NExpression {
+class NDecimal : public NExpression {
 public:
-    double value;
-    NDouble(double value) : value(value) { }
+    std::string value;
+    NDecimal(std::string value) : value(value) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NIdentifier : public NExpression {
@@ -53,6 +100,8 @@ public:
     std::string name;
     NIdentifier(const std::string& name) : name(name) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NFunctionCall : public NExpression {
@@ -63,19 +112,23 @@ public:
     id(id), arguments(arguments) { }
     NFunctionCall(nident id) : id(id) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NBinaryOperator : public NExpression {
 public:
-    std::string op;
     nexpr lhs;
+    std::string op;
     nexpr rhs;
     
     NBinaryOperator(nexpr lhs, std::string op, nexpr rhs)
-    : op(op), lhs(lhs), rhs(rhs)
+    : lhs(lhs), op(op), rhs(rhs)
     { }
     
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NAssignment : public NExpression {
@@ -85,29 +138,50 @@ public:
     NAssignment(nident lhs, nexpr rhs) : 
     lhs(lhs), rhs(rhs) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NBlock : public NExpression {
 public:
     StatementList statements;
-    NBlock() { }
+    NBlock() : statements() { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
+};
+
+class NStatementExpression : public NExpression {
+public:
+    nstmt statement;
+    NStatementExpression(nstmt statement)
+    : statement(statement) { }
+    
+    llvm::Value* codeGen(CodeGenContext& context) {
+        return statement->codeGen(context);
+    }
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NExpressionStatement : public NStatement {
 public:
     nexpr expression;
-    NExpressionStatement(nexpr expression) : 
-    expression(expression) { }
+    NExpressionStatement(nexpr expression)
+    : NStatement(), expression(expression) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NReturnStatement : public NStatement {
 public:
     nexpr expression;
-    NReturnStatement(nexpr expression) : 
-    expression(expression) { }
+    NReturnStatement(nexpr expression)
+    : NStatement(), expression(expression) { }
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NVariableDeclaration : public NStatement {
@@ -115,11 +189,16 @@ public:
     nident type;
     nident id;
     nexpr assignmentExpr;
-    NVariableDeclaration(nident type, nident id) :
-    type(type), id(id) { }
-    NVariableDeclaration(nident type, nident id, nexpr assignmentExpr) :
-    type(type), id(id), assignmentExpr(assignmentExpr) { }
+    
+    NVariableDeclaration(nident type, nident id)
+    : NStatement(), type(type), id(id) { }
+    
+    NVariableDeclaration(nident type, nident id, nexpr assignmentExpr)
+    : NStatement(), type(type), id(id), assignmentExpr(assignmentExpr) { }
+    
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NFunctionDeclaration : public NStatement {
@@ -128,15 +207,13 @@ public:
     IdentList type;
     nblock block;
     
-    NFunctionDeclaration(IdentList header,
-                         nblock block,
-                         IdentList type)
-    : header(header), type(type), block(block)
-    { }
+    NFunctionDeclaration(IdentList header, IdentList type, nblock block)
+    : NStatement(), header(header), type(type), block(block) {}
     
-    NFunctionDeclaration(const IdentList& header, nblock block)
-    : header(header), type(), block(block)
-    { }
+    NFunctionDeclaration(IdentList header, nblock block)
+    : NStatement(), header(header), type(), block(block) {}
     
     virtual llvm::Value* codeGen(CodeGenContext& context);
+    
+    void accept(Visitor &v) { v.visit(*this); }
 };

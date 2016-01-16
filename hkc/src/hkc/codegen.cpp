@@ -61,7 +61,7 @@ Value* NInteger::codeGen(CodeGenContext& context)
     return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value, true);
 }
 
-Value* NDouble::codeGen(CodeGenContext& context)
+Value* NDecimal::codeGen(CodeGenContext& context)
 {
     std::cout << "Creating double: " << value << endl;
     return ConstantFP::get(Type::getDoubleTy(getGlobalContext()), value);

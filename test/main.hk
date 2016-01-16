@@ -1,1 +1,9 @@
-add x y : int -> int := { return x+y; }
+add x y : int -> int -> int := {
+    return x + y;
+}
+
+@ main;
+run : void := {
+    x := add 1 2;
+    print x;
+}

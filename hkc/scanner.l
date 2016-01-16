@@ -47,6 +47,7 @@ unterminated_comment    [/][*]
 
 {blank}+    loc.step();
 [\n]+       loc.lines(yyleng); loc.step();
+"@"         return yy::hawk_parser::make_AT(loc);
 ";"         return yy::hawk_parser::make_SEMICOLON(loc);
 ":"         return yy::hawk_parser::make_COLON(loc);
 "!"         return yy::hawk_parser::make_EXCLAIM(loc);
@@ -66,21 +67,9 @@ unterminated_comment    [/][*]
 "return"    return yy::hawk_parser::make_RETURN(loc);
 
 
-{digit}      {
-  errno = 0;
-  long int n = strtol (yytext, NULL, 10);
-  if (! (LONG_MIN <= n && n <= LONG_MAX && errno != ERANGE))
-    driver.error (loc, "integer is out of range");
-  return yy::hawk_parser::make_INTEGER(n, loc);
-}
+{digit}     return yy::hawk_parser::make_INTEGER(yytext, loc);
 
-{digit}*[\.]{digit}*      {
-  errno = 0;
-  long double n = strtold (yytext, NULL);
-  if (! (LDBL_MIN <= n && n <= LDBL_MAX && errno != ERANGE))
-    driver.error (loc, "integer is out of range");
-  return yy::hawk_parser::make_DOUBLE(n, loc);
-}
+{digit}*[\.]{digit}*    return yy::hawk_parser::make_DECIMAL(yytext, loc);
 
 {id}       return yy::hawk_parser::make_IDENT(yytext, loc);
 .          driver.error (loc, "invalid character");
