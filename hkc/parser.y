@@ -94,7 +94,7 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
 
 %start module;
-module : %empty        { driver.result = NULL; }
+module : %empty        { driver.result = std::make_shared<NBlock>(); }
        | top_stmts END { driver.result = $1; }
        ;
        

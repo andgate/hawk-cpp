@@ -40,7 +40,6 @@ public:
     virtual ~Node() {}
     
     virtual void accept(Visitor& v) = 0;
-    virtual llvm::Value* codeGen(CodeGenContext& context) { }
 };
 
 class Visitor
@@ -65,7 +64,7 @@ public:
 
 class NExpression : public Node {
 public:
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NStatement : public Node {
@@ -76,25 +75,23 @@ public:
     : options()
     {}
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NInteger : public NExpression {
 public:
     std::string value;
     NInteger(const std::string& value) : value(value) { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NDecimal : public NExpression {
 public:
     std::string value;
     NDecimal(const std::string& value) : value(value) { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NString : public NExpression {
@@ -102,9 +99,7 @@ public:
     std::string value;
     NString(const std::string& value) : value(value) {}
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) {v.visit(*this); }
+    virtual void accept(Visitor &v) {v.visit(*this); }
 };
 
 class NIdentifier : public NExpression {
@@ -113,9 +108,7 @@ public:
     
     NIdentifier(const std::string& name) : name(name) { }
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NFunctionCall : public NExpression {
@@ -127,9 +120,7 @@ public:
     NFunctionCall(nident id, ExpressionList arguments)
     : id(id), arguments(arguments) { }
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NBinaryOperator : public NExpression {
@@ -142,9 +133,7 @@ public:
     : lhs(lhs), op(op), rhs(rhs)
     { }
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NAssignment : public NExpression {
@@ -153,18 +142,16 @@ public:
     nexpr rhs;
     NAssignment(nident lhs, nexpr rhs) : 
     lhs(lhs), rhs(rhs) { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NBlock : public NExpression {
 public:
     StatementList statements;
     NBlock() : statements() { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NStatementExpression : public NExpression {
@@ -173,11 +160,7 @@ public:
     NStatementExpression(nstmt statement)
     : statement(statement) { }
     
-    llvm::Value* codeGen(CodeGenContext& context) {
-        return statement->codeGen(context);
-    }
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NExpressionStatement : public NStatement {
@@ -185,9 +168,8 @@ public:
     nexpr expression;
     NExpressionStatement(nexpr expression)
     : NStatement(), expression(expression) { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NReturnStatement : public NStatement {
@@ -195,9 +177,8 @@ public:
     nexpr expression;
     NReturnStatement(nexpr expression)
     : NStatement(), expression(expression) { }
-    virtual llvm::Value* codeGen(CodeGenContext& context);
     
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NVariableDeclaration : public NStatement {
@@ -212,9 +193,7 @@ public:
     NVariableDeclaration(nident type, nident id, nexpr assignmentExpr)
     : NStatement(), type(type), id(id), assignmentExpr(assignmentExpr) { }
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NFunctionDeclaration : public NStatement {
@@ -227,7 +206,5 @@ public:
     NFunctionDeclaration(nident id, IdentList params, IdentList type_sig, nblock block)
     : NStatement(), id(id), params(params), type_sig(type_sig), block(block) {}
     
-    virtual llvm::Value* codeGen(CodeGenContext& context);
-    
-    void accept(Visitor &v) { v.visit(*this); }
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };

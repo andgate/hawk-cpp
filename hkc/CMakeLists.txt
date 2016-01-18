@@ -49,3 +49,5 @@ if ( MSVC )
     set_property( TARGET hkclib APPEND_STRING PROPERTY COMPILE_FLAGS /W3 )
     set_property( TARGET hkc APPEND_STRING PROPERTY COMPILE_FLAGS /W3 )
 endif ( MSVC )
+
+add_subdirectory(include/hkc/ast)
