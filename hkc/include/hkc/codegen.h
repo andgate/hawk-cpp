@@ -17,9 +17,32 @@
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include "hkc/parser/node.h"
+
 using namespace llvm;
 
 class NBlock;
+
+class CodeGen : public Visitor
+{
+public:
+    void visit(NExpression& n) override;
+    void visit(NStatement& n) override;
+    void visit(NInteger& n) override;
+    void visit(NDecimal& n) override;
+    void visit(NString& n) override;
+    void visit(NIdentifier& n) override;
+    void visit(NFunctionCall& n) override;
+    void visit(NBinaryOperator& n) override;
+    void visit(NAssignment& n) override;
+    void visit(NBlock& n) override;
+    void visit(NExpressionStatement& n) override;
+    void visit(NStatementExpression& n) override;
+    void visit(NReturnStatement& n) override;
+    void visit(NVariableDeclaration& n) override;
+    void visit(NFunctionDeclaration& n) override;
+    
+};                                
 
 class CodeGenBlock {
 public:
@@ -34,14 +57,18 @@ class CodeGenContext {
     
 public:
     Module *module;
+    
     CodeGenContext() { module = new Module("main", getGlobalContext()); }
     
     void generateCode(NBlock& root);
     GenericValue runCode();
+    
     std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
+    
     BasicBlock *currentBlock() { return blocks.top()->block; }
     void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
     void popBlock() { CodeGenBlock *top = blocks.top(); blocks.pop(); delete top; }
+    
     void setCurrentReturnValue(Value *value) { blocks.top()->returnValue = value; }
     Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
 };

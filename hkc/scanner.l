@@ -23,6 +23,8 @@ id    [a-zA-Z][a-zA-Z_0-9]*
 digit [0-9]+
 blank [ \t]
 
+string \"(\\.|[^\\"])*\"
+
 single_line_comment     "//".*
 multi_line_comment      [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
 unterminated_comment    [/][*]
@@ -67,13 +69,13 @@ unterminated_comment    [/][*]
 "return"    return yy::hawk_parser::make_RETURN(loc);
 
 
+{id}        return yy::hawk_parser::make_IDENT(yytext, loc);
+{string}    return yy::hawk_parser::make_STRING(yytext, loc);
 {digit}     return yy::hawk_parser::make_INTEGER(yytext, loc);
-
 {digit}*[\.]{digit}*    return yy::hawk_parser::make_DECIMAL(yytext, loc);
 
-{id}       return yy::hawk_parser::make_IDENT(yytext, loc);
-.          driver.error (loc, "invalid character");
-<<EOF>>    return yy::hawk_parser::make_END(loc);
+<<EOF>>     return yy::hawk_parser::make_END(loc);
+.           driver.error (loc, "invalid character");
 
 
 %%

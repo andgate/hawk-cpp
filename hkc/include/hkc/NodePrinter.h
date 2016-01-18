@@ -29,6 +29,11 @@ public:
         cout << n.value;
     }
     
+    void visit(NString& n)
+    {
+        cout << n.value;
+    }
+    
     void visit(NIdentifier& n)
     {
         cout << n.name;
@@ -36,7 +41,7 @@ public:
     
     void visit(NFunctionCall& n)
     {
-        cout << n.id;
+        cout << n.id->name;
         for(auto &exp : n.arguments)
         {
             cout << " ";
@@ -104,18 +109,20 @@ public:
             cout << endl;
         }
         
-        for(auto &id : n.header)
+        cout << n.id->name << " ";
+        
+        for(auto &param : n.params)
         {
-            cout << id->name << " "; 
+            cout << param->name << " "; 
         }
         
-        if(!n.type.empty())
+        if(!n.type_sig.empty())
         {   
-            cout << ": " << n.type.front()->name << " ";
+            cout << ": " << n.type_sig.front()->name << " ";
             
-            if(n.type.size() > 1)
+            if(n.type_sig.size() > 1)
             {
-                for(auto it = n.type.begin()+1; it != n.type.end(); it++)
+                for(auto it = n.type_sig.begin()+1; it != n.type_sig.end(); it++)
                 {
                     cout << "-> " << (**it).name << " ";
                 }

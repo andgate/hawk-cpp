@@ -28,9 +28,12 @@ void hkc::compile(Build_ptr build)
             
             programBlock->accept(printer);
             
-            /*CodeGenContext context;
+            CodeGen gen;
+            programBlock->accept(gen);
+            
+            CodeGenContext context;
             context.generateCode(*programBlock);
-            context.runCode();*/
+            context.runCode();
         }
     }
     
