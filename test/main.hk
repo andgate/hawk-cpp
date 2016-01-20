@@ -5,7 +5,14 @@ add x y
 }
 
 @ main;
-run : void := {
-    x : int := add 1 2;
+run
+    : void :=
+{
+    // Declarations are implicit
+    // let x : int;re
+    
+    // no type inference yet
+    x : int <- add 1 2;
+    
     print x;
 }

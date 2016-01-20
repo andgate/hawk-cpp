@@ -7,7 +7,6 @@
 
 #include <memory>
 
-class CodeGenContext;
 class NStatement;
 class NExpression;
 class NIdentifier;
@@ -183,15 +182,18 @@ public:
 
 class NVariableDeclaration : public NStatement {
 public:
-    nident type;
     nident id;
-    nexpr assignmentExpr;
+    nident type;
+    nexpr lhs;
     
-    NVariableDeclaration(nident type, nident id)
-    : NStatement(), type(type), id(id) { }
+    NVariableDeclaration(nident id)
+    : NStatement(), id(id), type(nullptr), lhs(nullptr) { }
     
-    NVariableDeclaration(nident type, nident id, nexpr assignmentExpr)
-    : NStatement(), type(type), id(id), assignmentExpr(assignmentExpr) { }
+    NVariableDeclaration(nident id, nident type)
+    : NStatement(), id(id), type(type), lhs(nullptr) { }
+    
+    NVariableDeclaration(nident id, nident type, nexpr lhs)
+    : NStatement(), id(id), type(type), lhs(lhs) { }
     
     virtual void accept(Visitor &v) { v.visit(*this); }
 };

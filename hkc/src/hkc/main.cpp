@@ -28,7 +28,8 @@ int main(int argc, char* argv[])
     auto build = std::make_shared<hkc::Build>();
     build->src_files.push_back("main.hk");
 
-    hkc::compile(build);
+    hkc::Compiler hkc(build);
+    hkc.run();
 
     return 0;
   }

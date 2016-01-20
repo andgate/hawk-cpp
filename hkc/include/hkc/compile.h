@@ -7,5 +7,14 @@
 
 namespace hkc
 {
-  void compile(Build_ptr build);
+    class Compiler
+    {
+    private:
+        Build_ptr build;
+        
+    public:
+        Compiler(Build_ptr build) : build(build) {}
+        
+        void run();
+    };
 }

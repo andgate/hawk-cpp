@@ -4,11 +4,16 @@
 #include "hkc/NodePrinter.h"
 #include "hkc/parser/driver.h"
 
+#include <string> 
+#include <vector> 
+
+#include <cstdlib>
+
 #include <iostream>
 
 class CodeGenContext;
 
-void hkc::compile(Build_ptr build)
+void hkc::Compiler::run()
 {
 	// ----------------
 	// Compiler Process
@@ -34,7 +39,7 @@ void hkc::compile(Build_ptr build)
         }
     }
     
-  // 1. Lex tokens
+  // 1. Parse file contents into hkc modules
 
   // 2. Parse the token sets into an abstract syntax tree.
 	//auto build_ast = parse(modules);
@@ -48,3 +53,4 @@ void hkc::compile(Build_ptr build)
 	// 4. Finally, write the binaries out to disk.
 	//write_files(codes)????
 }
+

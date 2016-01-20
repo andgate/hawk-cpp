@@ -35,10 +35,10 @@ set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost REQUIRED
   COMPONENTS
-  system
-  date_time
-  thread
-  regex
+#  system
+#  date_time
+#  thread
+#  regex
   filesystem
   program_options
   )

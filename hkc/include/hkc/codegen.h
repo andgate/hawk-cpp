@@ -38,11 +38,16 @@ private:
     Function *mainFunction;
     
 public:
-    CodeGen() { module = new Module("main", getGlobalContext()); }
+    CodeGen()
+    : module(new Module("main", getGlobalContext()))
+    , builder(getGlobalContext())
+    {}
     
     Module *module;
+    IRBuilder<> builder;
     
     std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
+    
     
     BasicBlock *currentBlock() { return blocks.top()->block; }
     void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }

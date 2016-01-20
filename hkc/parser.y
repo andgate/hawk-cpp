@@ -20,7 +20,7 @@ class NExpression;
 class NIdentifier;
 class NBlock;
 class NFunctionCall;
-class NVariableDefinition;
+class NVariableDeclaration;
 
 typedef std::shared_ptr<NBlock> nblock;
 typedef std::shared_ptr<NStatement> nstmt;
@@ -76,6 +76,7 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
   LPAREN    "("
   RPAREN    ")"
   RETURN    "return"
+  LET       "let"
 ;
 
 %token <std::string> IDENT STRING INTEGER DECIMAL
@@ -84,7 +85,7 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
 
 %type <nblock> top_stmts block stmts
-%type <nstmt> top_stmt stmt func_decl function
+%type <nstmt> top_stmt stmt func_decl function var_decl
 %type <nident> ident
 %type <IdentList> idents func_params type_sig options_stmt options_list
 %type <nexpr> primitive expr func_call
@@ -102,28 +103,39 @@ top_stmts : top_stmt           { $$ = std::make_shared<NBlock>(); $$->statements
           | top_stmts top_stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
           ;
 
-top_stmt : function { std::swap($$, $1); };
+top_stmt : function { std::swap($$, $1); }
+         | var_decl { std::swap($$, $1); }
+         ;
+
 
 options_stmt : "@" idents ";" { $$ = std::move($2); };
 
 options_list : options_stmt   { $$ = std::move($1); }
              | options_list options_stmt { $1.insert($1.end(), $2.begin(), $2.end()); $$ = std::move($1); }
              ;
-          
+
+             
 stmts : stmt       { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<nstmt>1); }
       | stmts stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
       ;
 
 stmt : expr ";"        { $$ = std::make_shared<NExpressionStatement>($1);   }
      | RETURN expr ";" { $$ = std::make_shared<NReturnStatement>($<nexpr>2); }
-     | function        { std::swap($$, $1);                                 }
+     | function        { $$ = std::move($1); }
+     | var_decl        { $$ = std::move($1); }
      ;
      
      
 block : LCURLY RCURLY       { $$ = std::make_shared<NBlock>(); }
-      | LCURLY stmts RCURLY { std::swap($$, $2); }
+      | LCURLY stmts RCURLY { $$ = std::move($2); }
       ;
 
+var_decl : "let" ident ":" ident ";"     { $$ = std::make_shared<NVariableDeclaration>($2, $4); }
+         | "let" ident ";"               { $$ = std::make_shared<NVariableDeclaration>($2); }
+         | ident ":" ident "<-" expr ";" { $$ = std::make_shared<NVariableDeclaration>($1, $3, $5); }
+         | ident "<-" expr ";"           { $$ = std::make_shared<NVariableDeclaration>($1, nullptr, $3); }
+         ;
+      
 function : func_decl { $$ = std::move($1); }
          | options_list func_decl { $2->options = std::move($1); $$ = std::move($2); };
       
@@ -133,14 +145,15 @@ func_decl : ident func_params type_sig ":=" block { $$ = std::make_shared<NFunct
                                                     $$ = std::make_shared<NFunctionDeclaration>($1, $2, $3, b); }
           ;
           
-func_params : %empty   { $$ = IdentList(); }
-            | idents   { $$ = std::move($1); }
+func_params : %empty { $$ = IdentList(); }
+            | idents { $$ = std::move($1); }
             ;
-               
+            
 type_sig : %empty              { $$ = IdentList(); }
          | ":" ident           { $$ = IdentList(); $$.push_back($2); }
          | type_sig "->" ident { $1.push_back($3); $$ = std::move($1); }
          ;
+         
       
 ident : IDENT { $$ = std::make_shared<NIdentifier>($1); };
 
@@ -166,6 +179,7 @@ expr : func_call       { std::swap($$, $<nexpr>1); }
      | expr "-" expr   { $$ = std::make_shared<NBinaryOperator>($1, "-", $3); }
      | "(" expr ")"    { std::swap($$, $2); }
      ;
+         
 
 func_call : ident       { $$ = std::make_shared<NFunctionCall>($1); }
           | ident exprs { $$ = std::make_shared<NFunctionCall>($1, $2); }

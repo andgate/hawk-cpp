@@ -67,6 +67,7 @@ unterminated_comment    [/][*]
 "("         return yy::hawk_parser::make_LPAREN(loc);
 ")"         return yy::hawk_parser::make_RPAREN(loc);
 "return"    return yy::hawk_parser::make_RETURN(loc);
+"let"       return yy::hawk_parser::make_LET(loc);
 
 
 {id}        return yy::hawk_parser::make_IDENT(yytext, loc);

@@ -5,18 +5,12 @@ set (NEST_SOURCES
   main.cpp
   nest.cpp
   config.cpp
-  find.cpp
-  load.cpp
   gen_build.cpp
 )
 
 set (NEST_HEADERS
-  resolve_path.h
-  constants.h
   nest.h
   config.h
-  find.h
-  load.h
   gen_build.h
 )
 

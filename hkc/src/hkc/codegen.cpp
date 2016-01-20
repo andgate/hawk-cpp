@@ -108,9 +108,10 @@ void CodeGen::visit(NFunctionCall& n)
     Function *function = module->getFunction(n.id->name.c_str());
     if (function == nullptr) {
         std::cerr << "no such function " << n.id->name << endl;
-        
+
         // maybe it's a variable?
         vvalue = loadIdent(*this, n.id);
+        return;
     }
     
     std::vector<Value*> args;
@@ -196,22 +197,22 @@ void CodeGen::visit(NVariableDeclaration& n)
     std::cout << "Creating variable declaration " << n.type->name << " " << n.id->name << endl;
     AllocaInst *alloc = new AllocaInst(typeOf(n.type), n.id->name.c_str(), currentBlock());
     locals()[n.id->name] = alloc;
-    if (n.assignmentExpr != nullptr) {
-        NAssignment assn(n.id, n.assignmentExpr);
+    if (n.lhs != nullptr) {
+        NAssignment assn(n.id, n.lhs);
         assn.accept(*this);
     }
     
     vvalue = alloc;
 }
 
-static void make_variable(CodeGen& gen, nident id, nident type, nexpr assignmentExpr = nullptr)
+static void make_variable(CodeGen& gen, nident id, nident type, nexpr lhs = nullptr)
 {
     std::cout << "Creating variable declaration " << type->name << " " << id->name << endl;
     AllocaInst *alloc = new AllocaInst(typeOf(type), id->name.c_str(), gen.currentBlock());
     gen.locals()[id->name] = alloc;
     
-    if (assignmentExpr != nullptr) {
-        NAssignment assn(id, assignmentExpr);
+    if (lhs != nullptr) {
+        NAssignment assn(id, lhs);
         assn.accept(gen);
     }
     
@@ -237,7 +238,7 @@ void CodeGen::visit(NFunctionDeclaration& n)
     // Build vector of types
     vector<Type*> argTypes;
     IdentList::const_iterator it;
-    for (int i = 0; i < n.type_sig.size()-1; i++) {
+    for (uint i = 0; i < n.type_sig.size()-1; i++) {
         argTypes.push_back(typeOf(n.type_sig[i]));
     }
     
@@ -252,12 +253,14 @@ void CodeGen::visit(NFunctionDeclaration& n)
     Value* argumentValue;
     
     assert(n.params.size() == n.type_sig.size() - 1);
-    for (int i = 0; i < n.params.size(); i++)
+    for (uint i = 0; i < n.params.size(); i++)
     {
         make_variable(*this, n.params[i], n.type_sig[i]);
         
         argumentValue = argsValues++;
         argumentValue->setName(n.params[i]->name.c_str());
+        
+        // Not sure what this is for
         StoreInst *inst = new StoreInst(argumentValue, locals()[n.params[i]->name], false, bblock);
     }
     
