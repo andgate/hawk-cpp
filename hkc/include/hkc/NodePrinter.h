@@ -19,6 +19,20 @@ public:
         cout << "ERROR: NodePrinter visiting NStatement?" << endl;
     }
     
+    void visit(NModule& n)
+    {        
+        cout << "Module " << n.name << endl;
+        n.block->accept(*this);
+    }
+    
+    void visit(NBlock& n)
+    {        
+        for(auto statement : n.statements)
+        {
+            statement->accept(*this);
+        }
+    }
+    
     void visit(NInteger& n)
     {
         cout << n.value;
@@ -61,14 +75,6 @@ public:
         n.lhs->accept(*this);
         cout << " = ";
         n.rhs->accept(*this);
-    }
-    
-    void visit(NBlock& n)
-    {        
-        for(auto statement : n.statements)
-        {
-            statement->accept(*this);
-        }
     }
     
     void visit(NExpressionStatement& n)

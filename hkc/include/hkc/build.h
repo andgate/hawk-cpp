@@ -9,7 +9,17 @@ namespace hkc
 
 	struct Build
 	{
-		std::vector<std::string> src_files;
+        Build() : in_files() {}
+        
+        std::string build_dir = "build";
+        std::string out_file;
+        std::string main_is = "main";
+		std::vector<std::string> in_files;
+        
+        enum Output { BinOut, LibOut };
+        Output output = BinOut;
+        
+        bool debug = false;
 	};
 
 	typedef std::shared_ptr<Build> Build_ptr;

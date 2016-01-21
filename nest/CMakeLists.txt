@@ -3,15 +3,12 @@ include_directories(${Hawk_SOURCE_DIR}/hkc/include)
 
 set (NEST_SOURCES
   main.cpp
-  nest.cpp
   config.cpp
-  gen_build.cpp
 )
 
 set (NEST_HEADERS
   nest.h
   config.h
-  gen_build.h
 )
 
 set (EXTRA_SOURCES
@@ -21,7 +18,7 @@ PREPEND(NEST_SOURCES src/nest ${NEST_SOURCES})
 PREPEND(NEST_HEADERS include/nest ${NEST_HEADERS})
 
 add_executable(nest ${NEST_SOURCES} ${NEST_HEADERS} ${EXTRA_SOURCES})
-target_link_libraries(nest hkclib ${yaml-cpp_LIBRARIES})
+target_link_libraries(nest ${yaml-cpp_LIBRARIES})
 
 if ( CMAKE_COMPILER_IS_GNUCC )
     # This is tested

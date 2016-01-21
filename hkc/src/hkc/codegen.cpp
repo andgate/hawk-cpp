@@ -2,10 +2,12 @@
 #include "hkc/codegen.h"
 #include "parser.hpp"
 
+#include <llvm/Support/raw_ostream.h>
+
 using namespace std;
 
 /* Compile the AST into a module */
-void CodeGen::generateCode(NBlock& root)
+void CodeGen::build_module(NModule& root)
 {
     std::cout << "Generating code...\n";
     
@@ -20,25 +22,23 @@ void CodeGen::generateCode(NBlock& root)
     root.accept(*this); /* emit bytecode for the toplevel block */
     ReturnInst::Create(getGlobalContext(), bblock);
     popBlock();
-    
-    /* Print the bytecode in a human-readable format 
-     *      to see if our program compiled properly
-     */
+}
+
+void CodeGen::print_ir()
+{
     std::cout << "Code is generated.\n";
     PassManager<Module> pm;
+    
     pm.addPass(PrintModulePass(outs()));
     pm.run(*module);
 }
 
-/* Executes the AST by running the main function */
-GenericValue CodeGen::runCode() {
-    std::cout << "Running code...\n";
-    ExecutionEngine *ee = EngineBuilder( unique_ptr<Module>(module) ).create();
-    ee->finalizeObject();
-    vector<GenericValue> noargs;
-    GenericValue v = ee->runFunction(mainFunction, noargs);
-    std::cout << "Code was run.\n";
-    return v;
+void CodeGen::write_ir(const std::string& out_file)
+{
+    std::error_code ec(errno, std::generic_category());
+    raw_fd_ostream file(out_file, ec, sys::fs::OpenFlags::F_RW);
+    module->print(file, NULL);
+    file.close();
 }
 
 /* Returns an LLVM type based on the identifier */
@@ -62,6 +62,26 @@ void CodeGen::visit(NExpression& n)
 
 void CodeGen::visit(NStatement& n)
 {
+}
+
+void CodeGen::visit(NModule& n)
+{
+    std::cout << "Generating module " << n.name << endl;
+    n.block->accept(*this);
+}
+
+void CodeGen::visit(NBlock& n)
+{
+    StatementList::const_iterator it;
+    Value* last = nullptr;
+    for (it = n.statements.begin(); it != n.statements.end(); it++) {
+        std::cout << "Generating code for " << typeid(**it).name() << endl;
+        (**it).accept(*this);
+        last = vvalue;
+    }
+    
+    std::cout << "Creating block" << endl;
+    vvalue = last;
 }
 
 void CodeGen::visit(NInteger& n)
@@ -160,19 +180,7 @@ void CodeGen::visit(NAssignment& n)
     vvalue = new StoreInst(rhs_val, locals()[n.lhs->name], false, currentBlock());
 }
 
-void CodeGen::visit(NBlock& n)
-{
-    StatementList::const_iterator it;
-    Value* last = nullptr;
-    for (it = n.statements.begin(); it != n.statements.end(); it++) {
-        std::cout << "Generating code for " << typeid(**it).name() << endl;
-        (**it).accept(*this);
-        last = vvalue;
-    }
-    
-    std::cout << "Creating block" << endl;
-    vvalue = last;
-}
+
 
 void CodeGen::visit(NExpressionStatement& n)
 {

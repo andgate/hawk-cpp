@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HAWK_NODE_H
+#define HAWK_NODE_H
 
 #include <iostream>
 #include <vector>
@@ -11,6 +12,7 @@ class NStatement;
 class NExpression;
 class NIdentifier;
 class NBlock;
+class NModule;
 class NInteger;
 class NDecimal;
 class NString;
@@ -23,6 +25,7 @@ class NReturnStatement;
 class NVariableDeclaration;
 class NFunctionDeclaration;
 
+typedef std::shared_ptr<NModule> nmodule;
 typedef std::shared_ptr<NBlock> nblock;
 typedef std::shared_ptr<NStatement> nstmt;
 typedef std::shared_ptr<NIdentifier> nident;
@@ -46,6 +49,8 @@ class Visitor
 public:
     virtual void visit(NExpression& n) = 0;
     virtual void visit(NStatement& n) = 0;
+    virtual void visit(NBlock& n) = 0;
+    virtual void visit(NModule& n) = 0;
     virtual void visit(NInteger& n) = 0;
     virtual void visit(NDecimal& n) = 0;
     virtual void visit(NString& n) = 0;
@@ -53,7 +58,6 @@ public:
     virtual void visit(NFunctionCall& n) = 0;
     virtual void visit(NBinaryOperator& n) = 0;
     virtual void visit(NAssignment& n) = 0;
-    virtual void visit(NBlock& n) = 0;
     virtual void visit(NExpressionStatement& n) = 0;
     virtual void visit(NStatementExpression& n) = 0;
     virtual void visit(NReturnStatement& n) = 0;
@@ -73,6 +77,24 @@ public:
     NStatement()
     : options()
     {}
+    
+    virtual void accept(Visitor &v) { v.visit(*this); }
+};
+
+class NModule : public NExpression
+{
+public:
+    std::string name;
+    nblock block;
+    
+    NModule(const std::string& name, nblock block)
+    : name(name), block(block) { }
+};
+
+class NBlock : public NExpression {
+public:
+    StatementList statements;
+    NBlock() : statements() { }
     
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
@@ -145,14 +167,6 @@ public:
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
-class NBlock : public NExpression {
-public:
-    StatementList statements;
-    NBlock() : statements() { }
-    
-    virtual void accept(Visitor &v) { v.visit(*this); }
-};
-
 class NStatementExpression : public NExpression {
 public:
     nstmt statement;
@@ -210,3 +224,5 @@ public:
     
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
+
+#endif

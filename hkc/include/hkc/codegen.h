@@ -46,22 +46,14 @@ public:
     Module *module;
     IRBuilder<> builder;
     
-    std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
-    
-    
-    BasicBlock *currentBlock() { return blocks.top()->block; }
-    void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
-    void popBlock() { CodeGenBlock *top = blocks.top(); blocks.pop(); delete top; }
-    
-    void setCurrentReturnValue(Value *value) { blocks.top()->returnValue = value; }
-    Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
-    
-    void generateCode(NBlock& root);
-    GenericValue runCode();
-    
+    void build_module(NModule& root);
+    void print_ir();
+    void write_ir(const std::string& out_file);
     
     void visit(NExpression& n) override;
     void visit(NStatement& n) override;
+    void visit(NModule& n) override;
+    void visit(NBlock& n) override;
     void visit(NInteger& n) override;
     void visit(NDecimal& n) override;
     void visit(NString& n) override;
@@ -69,11 +61,19 @@ public:
     void visit(NFunctionCall& n) override;
     void visit(NBinaryOperator& n) override;
     void visit(NAssignment& n) override;
-    void visit(NBlock& n) override;
     void visit(NExpressionStatement& n) override;
     void visit(NStatementExpression& n) override;
     void visit(NReturnStatement& n) override;
     void visit(NVariableDeclaration& n) override;
     void visit(NFunctionDeclaration& n) override;
+    
+    std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
+    
+    BasicBlock *currentBlock() { return blocks.top()->block; }
+    void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
+    void popBlock() { CodeGenBlock *top = blocks.top(); blocks.pop(); delete top; }
+    
+    void setCurrentReturnValue(Value *value) { blocks.top()->returnValue = value; }
+    Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
     
 };

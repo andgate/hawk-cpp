@@ -35,7 +35,7 @@ PREPEND(HKC_BIN_SOURCES src/hkc ${HKC_BIN_SOURCES})
 PREPEND(HKC_BIN_HEADERS include/hkc ${HKC_BIN_HEADERS})
 
 add_library (hkclib STATIC ${HKC_LIB_SOURCES} ${HKC_LIB_HEADERS} ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS})
-add_executable(hkc ${HKC_BIN_SOURCES} ${HKC_BIN_HEADERS})
+add_executable(hkc ${HKC_BIN_SOURCES} ${HKC_BIN_HEADERS} ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS})
 target_link_libraries(hkc hkclib)
 
 

@@ -1,5 +1,5 @@
 #ifndef HAWK_DRIVER_HH
-# define HAWK_DRIVER_HH
+#define HAWK_DRIVER_HH
 
 #include <string>
 #include <map>

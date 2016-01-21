@@ -4,8 +4,8 @@ add x y
     return x + y;
 }
 
-@ main;
-run
+@ run;
+add_nums
     : void :=
 {
     // Declarations are implicit
