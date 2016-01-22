@@ -14,7 +14,7 @@ void CodeGen::build_module(NModule& root)
     /* Create the top level interpreter function to call as entry */
     vector<Type*> argTypes;
     FunctionType *ftype = FunctionType::get(Type::getVoidTy(getGlobalContext()), makeArrayRef(argTypes), false);
-    mainFunction = Function::Create(ftype, GlobalValue::InternalLinkage, "main", module);
+    mainFunction = Function::Create(ftype, GlobalValue::ExternalLinkage, "main", module);
     BasicBlock *bblock = BasicBlock::Create(getGlobalContext(), "entry", mainFunction, 0);
     
     /* Push a new variable/block context */
@@ -202,11 +202,19 @@ void CodeGen::visit(NReturnStatement& n)
 
 void CodeGen::visit(NVariableDeclaration& n)
 {
-    std::cout << "Creating variable declaration " << n.type->name << " " << n.id->name << endl;
-    AllocaInst *alloc = new AllocaInst(typeOf(n.type), n.id->name.c_str(), currentBlock());
-    locals()[n.id->name] = alloc;
+    if(n.bindings->names.size() != 1 && n.bindings->type_sig.size() != 1) {
+        std::cerr << "Incomplete variable declaration!" << std::endl;
+        exit(1);
+    }
+    
+    auto& id = n.bindings->names.front();
+    auto& type = n.bindings->type_sig.front();
+    std::cout << "Creating variable declaration " << id->name << ": " << type->name << endl;
+    
+    AllocaInst *alloc = new AllocaInst(typeOf(type), id->name.c_str(), currentBlock());
+    locals()[id->name] = alloc;
     if (n.lhs != nullptr) {
-        NAssignment assn(n.id, n.lhs);
+        NAssignment assn(id, n.lhs);
         assn.accept(*this);
     }
     
@@ -243,16 +251,24 @@ Value* NExternDeclaration::codeGen(CodeGenContext& context)
 
 void CodeGen::visit(NFunctionDeclaration& n)
 {
+    if(n.bindings->names.size() == n.bindings->type_sig.size()) {
+        std::cerr << "Incomplete function declaration!" << std::endl;
+        exit(1);
+    }
+    
+    auto names = n.bindings->names;
+    auto type_sig = n.bindings->type_sig;
+    
     // Build vector of types
     vector<Type*> argTypes;
     IdentList::const_iterator it;
-    for (uint i = 0; i < n.type_sig.size()-1; i++) {
-        argTypes.push_back(typeOf(n.type_sig[i]));
+    for (uint i = 0; i < type_sig.size()-1; i++) {
+        argTypes.push_back(typeOf(type_sig[i]));
     }
     
     // Build function
-    FunctionType *ftype = FunctionType::get(typeOf(n.type_sig.back()), makeArrayRef(argTypes), false);
-    Function* function = Function::Create(ftype, GlobalValue::InternalLinkage, n.id->name.c_str(), module);
+    FunctionType *ftype = FunctionType::get(typeOf(type_sig.back()), makeArrayRef(argTypes), false);
+    Function* function = Function::Create(ftype, GlobalValue::InternalLinkage, names.front()->name.c_str(), module);
     BasicBlock *bblock = BasicBlock::Create(getGlobalContext(), "entry", function, 0);
     
     pushBlock(bblock);
@@ -260,22 +276,21 @@ void CodeGen::visit(NFunctionDeclaration& n)
     Function::arg_iterator argsValues = function->arg_begin();
     Value* argumentValue;
     
-    assert(n.params.size() == n.type_sig.size() - 1);
-    for (uint i = 0; i < n.params.size(); i++)
+    for (uint i = 1; i < names.size(); i++)
     {
-        make_variable(*this, n.params[i], n.type_sig[i]);
+        make_variable(*this, names[i], type_sig[i]);
         
         argumentValue = argsValues++;
-        argumentValue->setName(n.params[i]->name.c_str());
+        argumentValue->setName(names[i]->name.c_str());
         
         // Not sure what this is for
-        StoreInst *inst = new StoreInst(argumentValue, locals()[n.params[i]->name], false, bblock);
+        StoreInst *inst = new StoreInst(argumentValue, locals()[names[i]->name], false, bblock);
     }
     
     n.block->accept(*this);
     ReturnInst::Create(getGlobalContext(), getCurrentReturnValue(), bblock);
     
     popBlock();
-    std::cout << "Creating function: " << n.id->name << endl;
+    std::cout << "Creating function: " << names.front()->name << endl;
     vvalue = function;
 }

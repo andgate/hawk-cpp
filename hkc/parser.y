@@ -20,22 +20,30 @@ class NExpression;
 class NIdentifier;
 class NBlock;
 class NFunctionCall;
+class NameBindings;
 class NVariableDeclaration;
+class NFunctionDeclaration;
 
 typedef std::shared_ptr<NBlock> nblock;
 typedef std::shared_ptr<NStatement> nstmt;
 typedef std::shared_ptr<NIdentifier> nident;
 typedef std::shared_ptr<NExpression> nexpr;
+typedef std::shared_ptr<NFunctionDeclaration> nfuncdecl;
+typedef std::shared_ptr<NVariableDeclaration> nvardecl;
 typedef std::shared_ptr<NFunctionCall> nfunc_call;
+typedef std::shared_ptr<NameBindings> nbindings;
 
 typedef std::vector<std::shared_ptr<NStatement>> StatementList;
 typedef std::vector<std::shared_ptr<NExpression>> ExpressionList;
 typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
+class NameBindings;
+
 }
 
 // The parsing context.
 %param { hawk_driver& driver }
+
 %locations
 %initial-action
 {
@@ -49,15 +57,18 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
 %code
 {
-# include "hkc/parser/driver.h"
-# include "hkc/parser/node.h"
+#include "hkc/parser/driver.h"
+#include "hkc/parser/node.h"
 
-# include <string>
+#include <string>
 }
 
 %define api.token.prefix {TOK_}
 %token
   END  0    "end of file"
+  LPAREN    "("
+  RPAREN    ")"
+  CARET     "^"
   AT        "@"
   SEMICOLON ";"
   COLON     ":"
@@ -73,9 +84,6 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
   SLASH     "/"
   PLUS      "+" 
   MINUS     "-"
-  LPAREN    "("
-  RPAREN    ")"
-  RETURN    "return"
   LET       "let"
 ;
 
@@ -85,11 +93,12 @@ typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
 
 
 %type <nblock> top_stmts block stmts
-%type <nstmt> top_stmt stmt func_decl function var_decl
+%type <nstmt> top_stmt stmt function func_decl variable var_decl
 %type <nident> ident
-%type <IdentList> idents func_params type_sig options_stmt options_list
+%type <IdentList> idents type_sig options_stmt options_list
 %type <nexpr> primitive expr func_call
 %type <ExpressionList> exprs
+%type <nbindings> name_bindings
 
 %%
 
@@ -99,12 +108,16 @@ module : %empty        { driver.result = std::make_shared<NBlock>(); }
        | top_stmts END { driver.result = $1; }
        ;
        
+block : LCURLY RCURLY       { $$ = std::make_shared<NBlock>(); }
+      | LCURLY stmts RCURLY { $$ = std::move($2); }
+      ;
+       
 top_stmts : top_stmt           { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<nstmt>1); }
           | top_stmts top_stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
           ;
 
 top_stmt : function { std::swap($$, $1); }
-         | var_decl { std::swap($$, $1); }
+         | variable ";" { std::swap($$, $1); }
          ;
 
 
@@ -119,38 +132,33 @@ stmts : stmt       { $$ = std::make_shared<NBlock>(); $$->statements.push_back($
       | stmts stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
       ;
 
-stmt : expr ";"        { $$ = std::make_shared<NExpressionStatement>($1);   }
-     | RETURN expr ";" { $$ = std::make_shared<NReturnStatement>($<nexpr>2); }
-     | function        { $$ = std::move($1); }
-     | var_decl        { $$ = std::move($1); }
+stmt : expr ";"        { $$ = std::make_shared<NExpressionStatement>($1); }
+     | "^" expr ";" { $$ = std::make_shared<NReturnStatement>($<nexpr>2); }
+     | variable ";"    { $$ = std::move($1); }
+     | function      { $$ = std::move($1); }
      ;
-     
-     
-block : LCURLY RCURLY       { $$ = std::make_shared<NBlock>(); }
-      | LCURLY stmts RCURLY { $$ = std::move($2); }
-      ;
 
-var_decl : "let" ident ":" ident ";"     { $$ = std::make_shared<NVariableDeclaration>($2, $4); }
-         | "let" ident ";"               { $$ = std::make_shared<NVariableDeclaration>($2); }
-         | ident ":" ident "<-" expr ";" { $$ = std::make_shared<NVariableDeclaration>($1, $3, $5); }
-         | ident "<-" expr ";"           { $$ = std::make_shared<NVariableDeclaration>($1, nullptr, $3); }
-         ;
+variable : var_decl { $$ = std::move($1); }
+         | options_list var_decl { $2->options = std::move($1); $$ = std::move($2); };
       
+var_decl : "let" name_bindings     { $$ = std::make_shared<NVariableDeclaration>($2, nullptr); }
+         | name_bindings "<-" expr { $$ = std::make_shared<NVariableDeclaration>($1, $3); }
+         ;
+           
 function : func_decl { $$ = std::move($1); }
          | options_list func_decl { $2->options = std::move($1); $$ = std::move($2); };
       
-func_decl : ident func_params type_sig ":=" block { $$ = std::make_shared<NFunctionDeclaration>($1, $2, $3, $5); }
-          | ident func_params type_sig ":=" stmt  { auto b = std::make_shared<NBlock>();
-                                                    b->statements.push_back($<nstmt>5);
-                                                    $$ = std::make_shared<NFunctionDeclaration>($1, $2, $3, b); }
+func_decl : name_bindings ":=" block { $$ = std::make_shared<NFunctionDeclaration>($1, $3); }
+          | name_bindings ":=" stmt  { auto b = std::make_shared<NBlock>();
+                                       b->statements.push_back($<nstmt>3);
+                                       $$ = std::make_shared<NFunctionDeclaration>($1, b);
+                                     }
           ;
-          
-func_params : %empty { $$ = IdentList(); }
-            | idents { $$ = std::move($1); }
-            ;
+
+name_bindings : idents type_sig { $$ = std::make_shared<NameBindings>($1, $2); };
             
 type_sig : %empty              { $$ = IdentList(); }
-         | ":" ident           { $$ = IdentList(); $$.push_back($2); }
+         | ":" ident           { $$ = IdentList(); $$.push_back(std::move($2)); }
          | type_sig "->" ident { $1.push_back($3); $$ = std::move($1); }
          ;
          

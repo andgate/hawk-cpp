@@ -115,20 +115,22 @@ public:
             cout << endl;
         }
         
-        cout << n.id->name << " ";
         
-        for(auto &param : n.params)
+        auto& names = n.bindings->type_sig;
+        for(auto it = names.begin(); it != names.end(); it++)
         {
-            cout << param->name << " "; 
+            cout << (**it).name << " "; 
         }
         
-        if(!n.type_sig.empty())
+        auto& type_sig = n.bindings->type_sig;
+        
+        if(!type_sig.empty())
         {   
-            cout << ": " << n.type_sig.front()->name << " ";
+            cout << ": " << type_sig.front()->name << " ";
             
-            if(n.type_sig.size() > 1)
+            if(type_sig.size() > 1)
             {
-                for(auto it = n.type_sig.begin()+1; it != n.type_sig.end(); it++)
+                for(auto it = type_sig.begin()+1; it != type_sig.end(); it++)
                 {
                     cout << "-> " << (**it).name << " ";
                 }

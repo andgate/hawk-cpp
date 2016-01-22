@@ -22,6 +22,7 @@ class NAssignment;
 class NStatementExpression;
 class NExpressionStatement;
 class NReturnStatement;
+class NameBindings;
 class NVariableDeclaration;
 class NFunctionDeclaration;
 
@@ -30,6 +31,7 @@ typedef std::shared_ptr<NBlock> nblock;
 typedef std::shared_ptr<NStatement> nstmt;
 typedef std::shared_ptr<NIdentifier> nident;
 typedef std::shared_ptr<NExpression> nexpr;
+typedef std::shared_ptr<NameBindings> nbindings;
 
 typedef std::vector<std::shared_ptr<NStatement>> StatementList;
 typedef std::vector<std::shared_ptr<NExpression>> ExpressionList;
@@ -89,6 +91,8 @@ public:
     
     NModule(const std::string& name, nblock block)
     : name(name), block(block) { }
+    
+    virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NBlock : public NExpression {
@@ -194,35 +198,39 @@ public:
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
+class NameBindings {
+public:
+    IdentList names;
+    IdentList type_sig;
+    
+    NameBindings(IdentList names, IdentList type_sig)
+    : names(names), type_sig(type_sig) {}
+};
+
 class NVariableDeclaration : public NStatement {
 public:
-    nident id;
-    nident type;
+    nbindings bindings;
     nexpr lhs;
     
-    NVariableDeclaration(nident id)
-    : NStatement(), id(id), type(nullptr), lhs(nullptr) { }
+    NVariableDeclaration(nbindings bindings)
+    : NStatement(), bindings(bindings), lhs(nullptr) { }
     
-    NVariableDeclaration(nident id, nident type)
-    : NStatement(), id(id), type(type), lhs(nullptr) { }
-    
-    NVariableDeclaration(nident id, nident type, nexpr lhs)
-    : NStatement(), id(id), type(type), lhs(lhs) { }
+    NVariableDeclaration(nbindings bindings, nexpr lhs)
+    : NStatement(), bindings(bindings), lhs(lhs) { }
     
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
 
 class NFunctionDeclaration : public NStatement {
 public:
-    nident id;
-    IdentList params;
-    IdentList type_sig;
+    nbindings bindings;
     nblock block;
     
-    NFunctionDeclaration(nident id, IdentList params, IdentList type_sig, nblock block)
-    : NStatement(), id(id), params(params), type_sig(type_sig), block(block) {}
+    NFunctionDeclaration(nbindings bindings, nblock block)
+    : NStatement(), bindings(bindings), block(block) {}
     
     virtual void accept(Visitor &v) { v.visit(*this); }
 };
+
 
 #endif

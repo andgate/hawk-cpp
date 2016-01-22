@@ -88,8 +88,8 @@ void hkc::Compiler::run()
 nmodule hkc::Compiler::parse(const std::string& in_file)
 {
     hawk_driver driver;
-    //driver.trace_parsing = true;
-    driver.trace_scanning = false;
+    driver.trace_parsing = true;
+    driver.trace_scanning = true;
     
     if(driver.parse(in_file))
     {
@@ -141,7 +141,7 @@ void hkc::Compiler::link(const std::vector<std::string>& in_files)
     fs::create_directories(out_dir);
     out_dir /= build->out_file;
     
-    std::string command("gcc -nostartfiles " + obj_files + "-o " + out_dir.string());
+    std::string command("gcc " + obj_files + "-o " + out_dir.string());
     
     if(build->debug == true) command += " -g";
     
