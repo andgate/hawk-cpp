@@ -251,7 +251,7 @@ Value* NExternDeclaration::codeGen(CodeGenContext& context)
 
 void CodeGen::visit(NFunctionDeclaration& n)
 {
-    if(n.bindings->names.size() == n.bindings->type_sig.size()) {
+    if(n.bindings->names.size() != n.bindings->type_sig.size()) {
         std::cerr << "Incomplete function declaration!" << std::endl;
         exit(1);
     }

@@ -4,10 +4,6 @@ add x y : int -> int -> int :=
 some_junk : int <- 1
 
 add_nums : void :=
-    // Declarations are implicit
-    // let x : int
-    
     // no type inference yet
     x : int <- add 1 2
-    
     print x

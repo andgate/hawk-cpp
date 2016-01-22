@@ -88,7 +88,7 @@ void hkc::Compiler::run()
 nmodule hkc::Compiler::parse(const std::string& in_file)
 {
     hawk_driver driver;
-    driver.trace_parsing = true;
+    //driver.trace_parsing = true;
     driver.trace_scanning = true;
     
     if(driver.parse(in_file))

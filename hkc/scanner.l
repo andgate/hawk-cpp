@@ -15,7 +15,7 @@
     static yy::location loc;
     
     std::stack<unsigned int> indent_stack;
-    unsigned int current_line_indent = 0;
+    unsigned int indent_level = 0;
     unsigned int nesting = 0;
     
     unsigned int white_count(char* line);
@@ -23,7 +23,6 @@
 
 %x do_bol
 %x indent
-%x undent
 %s normal
 
 %option noyywrap yylineno batch debug
@@ -55,66 +54,53 @@ unterminated_comment    [/][*]
 %}
 
 
-<*>^[ ]*\n     {/* ignore blank lines forever */}
+<*>^[ ]*\n    loc.lines(1);
 
 <do_bol>{
-    ^[ ]*   { current_line_indent = white_count(yytext); }
+    ^[ ]*   { indent_level = yyleng-1; }
     .       {
-                yyless(0);
+                unput(*yytext);
                 
-                if(current_line_indent < indent_stack.top()) {
-                    BEGIN(undent);
-                } else if(current_line_indent > indent_stack.top()) {
-                    BEGIN(normal);
-                } else {
-                    BEGIN(normal);
-                    return yy::hawk_parser::make_SEMICOLON(loc);
+                while(indent_level < indent_stack.top())
+                {
+                    indent_level = indent_stack.top();
+                    indent_stack.pop();
+                    unput('}');
+                    unput(';');
                 }
-            }
-}
-
- /* The following are the rules that keep track of indentation. */
-<indent>{
-    "\n"    { /* ignore whitespace */ }
-    ^[ ]*   { current_line_indent = white_count(yytext);
-              indent_stack.push(current_line_indent);
-              return yy::hawk_parser::make_LCURLY(loc);
-            }
-            
-    .       {
-                //unput(*yytext);
-                yyless(0);
+                
+                if (indent_level == indent_stack.top()){
+                    unput(';');
+                }
+                
                 BEGIN(normal);
             }
 }
 
-<undent>{
+<indent>{
+    ^[ ]*   indent_level = yyleng - 1;
+            
     .       {
                 yyless(0);
+                indent_stack.push(indent_level);
                 
-                if(current_line_indent < indent_stack.top())
-                {
-                    indent_stack.pop();
-                    return yy::hawk_parser::make_RCURLY(loc);
-                } else
-                {
-                    indent_stack.push(current_line_indent);
-                    BEGIN(normal);
-                }
+                BEGIN(normal);
+                return yy::hawk_parser::make_LCURLY(loc);
             }
+
 }
             
 <normal>{
 
-    \n          BEGIN(do_bol);
+    \n          loc.lines(1); indent_level = 0; BEGIN(do_bol);
                 
     [\t]        driver.error(loc, "Tabs are not allowed!"); exit(0);
 
     {single_line_comment}   loc.lines(1);
     
-    
-    ":="        BEGIN(indent); return yy::hawk_parser::make_FUNDEC(loc);
-    ":-"        BEGIN(indent); return yy::hawk_parser::make_TYPDEC(loc);
+    ":="[ ]*"\n" BEGIN(indent); loc.lines(1); indent_level = 0; return yy::hawk_parser::make_FUNDEC(loc);        
+    ":="         return yy::hawk_parser::make_FUNDEC(loc);
+    ":-"         BEGIN(indent); return yy::hawk_parser::make_TYPDEC(loc);
     
     "("         nesting++; return yy::hawk_parser::make_LPAREN(loc);
     ")"         nesting--; return yy::hawk_parser::make_RPAREN(loc);
@@ -140,24 +126,24 @@ unterminated_comment    [/][*]
     {integer}   return yy::hawk_parser::make_INTEGER(yytext, loc);
     {decimal}   return yy::hawk_parser::make_DECIMAL(yytext, loc);
     
-    
-    <<EOF>>     yyless(0); BEGIN(undent); return yy::hawk_parser::make_SEMICOLON(loc);
-
-    
+    <<EOF>>     {
+                    if(indent_stack.top() > 0)
+                    {
+                        while(indent_stack.top() > 0)
+                        {
+                            unput('}');
+                            indent_stack.pop();
+                        }
+                        unput(';');
+                    } else
+                    {
+                        return yy::hawk_parser::make_END(loc);
+                    }
+                }
 }
 
 [.\n]       { driver.error (loc, "invalid character"); }
-<<EOF>>     {
-                if(indent_stack.top() > 0)
-                {
-                    yyless(0);
-                    indent_stack.pop();
-                    return yy::hawk_parser::make_RCURLY(loc);
-                } else
-                {
-                    return yy::hawk_parser::make_END(loc);
-                }
-            }
+<<EOF>>     { yyless(0); BEGIN(normal); }
 
 %%
 
