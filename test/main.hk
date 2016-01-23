@@ -1,9 +1,9 @@
 add x y : int -> int -> int :=
-    ^ x + y
+  ^ x + y
     
 some_junk : int <- 1
 
 add_nums : void :=
-    // no type inference yet
-    x : int <- add 1 2
-    print x
+  // no type inference yet
+  x : int <- add 1 2
+  print x
