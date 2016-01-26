@@ -6,18 +6,20 @@ ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set (HKC_LIB_SOURCES
-  compile.cpp
-  parser/driver.cpp
+  ast.cpp
+  ast_printer.cpp
   codegen.cpp
+  compiler.cpp
+  driver.cpp
 )
 
 set (HKC_LIB_HEADERS
+  ast.h
+  ast_printer.h
   build.h
-  compile.h
   codegen.h
-  NodePrinter.h
-  parser/driver.h
-  parser/node.h
+  compiler.h
+  driver.h
   utils/ReadFile.h
 )
 

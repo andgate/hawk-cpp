@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _HKC_BUILD_H_
+#define _HKC_BUILD_H_
 
 #include <string>
 #include <vector>
@@ -25,3 +26,5 @@ namespace hkc
 	typedef std::shared_ptr<Build> Build_ptr;
 
 }
+
+#endif

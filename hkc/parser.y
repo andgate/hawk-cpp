@@ -10,34 +10,48 @@
 %code requires
 {
 
-#include <vector>
 #include <memory>
+#include <string>
+#include <vector>
+
 class hawk_driver;
 
-class CodeGenContext;
-class NStatement;
-class NExpression;
-class NIdentifier;
-class NBlock;
-class NFunctionCall;
-class NameBindings;
-class NVariableDeclaration;
-class NFunctionDeclaration;
-
-typedef std::shared_ptr<NBlock> nblock;
-typedef std::shared_ptr<NStatement> nstmt;
-typedef std::shared_ptr<NIdentifier> nident;
-typedef std::shared_ptr<NExpression> nexpr;
-typedef std::shared_ptr<NFunctionDeclaration> nfuncdecl;
-typedef std::shared_ptr<NVariableDeclaration> nvardecl;
-typedef std::shared_ptr<NFunctionCall> nfunc_call;
-typedef std::shared_ptr<NameBindings> nbindings;
-
-typedef std::vector<std::shared_ptr<NStatement>> StatementList;
-typedef std::vector<std::shared_ptr<NExpression>> ExpressionList;
-typedef std::vector<std::shared_ptr<NIdentifier>> IdentList;
-
-class NameBindings;
+namespace ast
+{
+    class Source;
+    class Module;
+    class Expression;
+    class IdentifierRef;
+    class Integer;
+    class Decimal;
+    class String;
+    class FunctionCall;
+    class BinaryOperator;
+    class Assignment;
+    class Return;
+    class NameBindings;
+    class Variable;
+    class LocalVariable;
+    class GlobalVariable;
+    class Function;
+    class LocalFunction;
+    class GlobalFunction;
+    
+    typedef std::string Identifier;
+    
+    typedef std::shared_ptr<Source> pSource;
+    typedef std::shared_ptr<Module> pModule;
+    typedef std::shared_ptr<Expression> pExpression;
+    typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
+    typedef std::shared_ptr<NameBindings> pNameBindings;
+    typedef std::shared_ptr<Variable> pVariable;
+    typedef std::shared_ptr<Function> pFunction;
+    
+    typedef std::vector<pModule> pModuleVec;
+    typedef std::vector<Identifier> IdentifierVec;
+    typedef std::vector<pExpression> pExpressionVec;
+    typedef std::vector<pVariable> pVariableVec;
+}
 
 }
 
@@ -49,7 +63,7 @@ class NameBindings;
 {
   // Initialize the initial location.
   
-  @$.begin.filename = @$.end.filename = &driver.file;
+  @$.begin.filename = @$.end.filename = &driver.filename;
 };
 
 %define parse.trace
@@ -57,10 +71,12 @@ class NameBindings;
 
 %code
 {
-#include "hkc/parser/driver.h"
-#include "hkc/parser/node.h"
+#include "hkc/driver.h"
+#include "hkc/ast.h"
 
 #include <string>
+#include <cstdlib>
+
 }
 
 %define api.token.prefix {TOK_}
@@ -91,118 +107,128 @@ class NameBindings;
 
 %printer { yyoutput << (&$$); } <*>;
 
+%type <ast::pModule> module
+%type <std::string> ident
+%type <ast::IdentifierVec> idents type_sig attribs attribs_stmt
+%type <ast::pIdentifierRef> ident_ref
+%type <ast::pExpression> primitive expr func_call top_stmt stmt
+%type <ast::pExpressionVec> exprs top_stmts stmts block
+%type <ast::pNameBindings> name_bindings
+%type <ast::pVariable> var_decl var local_var global_var
+%type <ast::pFunction> func_decl func global_func local_func
 
-%type <nblock> top_stmts block stmts
-%type <nstmt> top_stmt stmt function func_decl variable var_decl
-%type <nident> ident
-%type <IdentList> idents type_sig options_stmt options_list
-%type <nexpr> primitive expr func_call
-%type <ExpressionList> exprs
-%type <nbindings> name_bindings
 
 %%
 
 
 %start module;
-module : %empty        { driver.result = std::make_shared<NBlock>(); }
-       | top_stmts END { driver.result = $1; }
+module : %empty        { driver.result = std::make_shared<ast::Module>(driver.filename, ast::pExpressionVec()); }
+       | top_stmts END { driver.result = std::make_shared<ast::Module>(driver.filename, $1); }
        ;
        
-block : LCURLY RCURLY       { $$ = std::make_shared<NBlock>(); }
-      | LCURLY stmts RCURLY { $$ = std::move($2); }
-      ;
-       
-top_stmts : top_stmt           { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<nstmt>1); }
-          | top_stmts top_stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
+top_stmts : top_stmt           { $$ = ast::pExpressionVec(); $$.push_back($1); }
+          | top_stmts top_stmt { $1.push_back($2); $$ = $1; }
           ;
 
-top_stmt : function { std::swap($$, $1); }
-         | variable ";" { std::swap($$, $1); }
+top_stmt : global_func     { ast::pExpression t = $1; $$ = t; }
+         | global_var ";"  { ast::pExpression t = $1; $$ = t; }
          ;
 
 
-options_stmt : "@" idents ";" { $$ = std::move($2); };
+attribs : attribs_stmt         { $$ = $1; }
+        | attribs attribs_stmt { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }
+        ;
 
-options_list : options_stmt   { $$ = std::move($1); }
-             | options_list options_stmt { $1.insert($1.end(), $2.begin(), $2.end()); $$ = std::move($1); }
-             ;
+attribs_stmt : "@" idents ";" { $$ = $2; };
 
              
-stmts : stmt       { $$ = std::make_shared<NBlock>(); $$->statements.push_back($<nstmt>1); }
-      | stmts stmt { $1->statements.push_back($<nstmt>2); std::swap($$, $1); }
+stmts : stmt       { $$ = ast::pExpressionVec(); $$.push_back($1); }
+      | stmts stmt { $1.push_back($2); $$ = $1; }
       ;
 
-stmt : expr ";"        { $$ = std::make_shared<NExpressionStatement>($1); }
-     | "^" expr ";" { $$ = std::make_shared<NReturnStatement>($<nexpr>2); }
-     | variable ";"    { $$ = std::move($1); }
-     | function      { $$ = std::move($1); }
+stmt : expr ";"     { $$ = $1; }
+     | "^" expr ";" { $$ = std::make_shared<ast::Return>($2); }
+     | local_var ";" { ast::pExpression t = $1; $$ = t; }
+     | local_func    { ast::pExpression t = $1; $$ = t; }
      ;
+     
+local_var  : var { $$ = ast::promote_local($1); };
+global_var : var { $$ = ast::promote_global($1); };
 
-variable : var_decl { $$ = std::move($1); }
-         | options_list var_decl { $2->options = std::move($1); $$ = std::move($2); };
+var : var_decl         { $$ = $1; }
+    | attribs var_decl { $2->attribs = $1; $$ = $2; }
+    ;
       
-var_decl : "let" name_bindings     { $$ = std::make_shared<NVariableDeclaration>($2, nullptr); }
-         | name_bindings "<-" expr { $$ = std::make_shared<NVariableDeclaration>($1, $3); }
+var_decl : "let" name_bindings     { $$ = mk_var($2, nullptr); }
+         | name_bindings "<-" expr { $$ = mk_var($1, $3); }
          ;
-           
-function : func_decl { $$ = std::move($1); }
-         | options_list func_decl { $2->options = std::move($1); $$ = std::move($2); };
+          
+local_func  : func { $$ = ast::promote_local($1); };
+global_func : func { $$ = ast::promote_global($1); };
+
+func : func_decl         { $$ = $1; }
+     | attribs func_decl { $2->attribs = $1; $$ = $2; }
+     ;
       
-func_decl : name_bindings ":=" block { $$ = std::make_shared<NFunctionDeclaration>($1, $3); }
-          | name_bindings ":=" stmt  { auto b = std::make_shared<NBlock>();
-                                       b->statements.push_back($<nstmt>3);
-                                       $$ = std::make_shared<NFunctionDeclaration>($1, b);
+func_decl : name_bindings ":=" block { $$ = ast::mk_func($1, $3); }
+          | name_bindings ":=" stmt  { ast::pExpressionVec exprs;
+                                       exprs.push_back($3);
+                                       $$ = ast::mk_func($1, exprs);
                                      }
           ;
+          
+block : LCURLY RCURLY       { $$ = ast::pExpressionVec(); }
+      | LCURLY stmts RCURLY { $$ = $2; }
+      ;
 
-name_bindings : idents type_sig { $$ = std::make_shared<NameBindings>($1, $2); };
+name_bindings : idents type_sig { $$ = std::make_shared<ast::NameBindings>($1, $2); };
             
-type_sig : %empty              { $$ = IdentList(); }
-         | ":" ident           { $$ = IdentList(); $$.push_back(std::move($2)); }
+type_sig : %empty              { $$ = ast::IdentifierVec(); }
+         | ":" ident           { $$ = ast::IdentifierVec(); $$.push_back($2); }
          | type_sig "->" ident { $1.push_back($3); $$ = std::move($1); }
          ;
-         
-      
-ident : IDENT { $$ = std::make_shared<NIdentifier>($1); };
 
-idents : ident        { $$ = IdentList(); $$.push_back($<nident>1); }
-       | idents ident { $1.push_back($<nident>2); $$ = std::move($1); }
+      
+ident : IDENT { $$ = ast::Identifier($1); };
+
+ident_ref : ident { $$ = std::make_shared<ast::IdentifierRef>($1); };  
+
+idents : ident        { $$ = ast::IdentifierVec(); $$.push_back($1); }
+       | idents ident { $1.push_back($2); $$ = $1; }
        ;
       
 
       
-primitive : INTEGER { $$ = std::make_shared<NInteger>($<std::string>1); }
-          | DECIMAL { $$ = std::make_shared<NDecimal>($<std::string>1); }
-          | STRING  { $$ = std::make_shared<NString>($<std::string>1); }
+primitive : INTEGER { $$ = std::make_shared<ast::Integer>(atoll($1.c_str())); }
+          | DECIMAL { $$ = std::make_shared<ast::Decimal>(strtold($1.c_str(), nullptr)); }
+          | STRING  { $$ = std::make_shared<ast::String>($<std::string>1); }
           ;
         
 
 
-expr : func_call       { std::swap($$, $<nexpr>1); }
-     | ident "=" expr  { $$ = std::make_shared<NAssignment>($<nident>1, $3); }
-     | primitive       { std::swap($$, $1); }
-     | expr "*" expr   { $$ = std::make_shared<NBinaryOperator>($1, "*", $3); }
-     | expr "/" expr   { $$ = std::make_shared<NBinaryOperator>($1, "/", $3); }
-     | expr "+" expr   { $$ = std::make_shared<NBinaryOperator>($1, "+", $3); }
-     | expr "-" expr   { $$ = std::make_shared<NBinaryOperator>($1, "-", $3); }
-     | "(" expr ")"    { std::swap($$, $2); }
+expr : func_call           { $$ = $<ast::pExpression>1; }
+     | ident_ref           { ast::pExpression t = $1; $$ = t; }
+     | ident_ref "=" expr  { $$ = std::make_shared<ast::Assignment>($1, $3); }
+     | primitive           { $$ = $1; }
+     | expr "*" expr       { $$ = std::make_shared<ast::BinaryOperator>($1, "*", $3); }
+     | expr "/" expr       { $$ = std::make_shared<ast::BinaryOperator>($1, "/", $3); }
+     | expr "+" expr       { $$ = std::make_shared<ast::BinaryOperator>($1, "+", $3); }
+     | expr "-" expr       { $$ = std::make_shared<ast::BinaryOperator>($1, "-", $3); }
+     | "(" expr ")"        { $$ = $2; }
      ;
          
 
-func_call : ident       { $$ = std::make_shared<NFunctionCall>($1); }
-          | ident exprs { $$ = std::make_shared<NFunctionCall>($1, $2); }
-          ;
+func_call : ident_ref exprs { $$ = std::make_shared<ast::FunctionCall>($1, $2); }
+          ;        
           
-exprs : expr        { $$ = ExpressionList(); $$.push_back($1); }
-      | exprs expr  { $1.push_back($2); $$ = std::move($1);    }
+exprs : expr        { $$ = ast::pExpressionVec(); $$.push_back($1); }
+      | exprs expr  { $1.push_back($2); $$ = $1;    }
       ;
 
 %%
 
 
-void
-yy::hawk_parser::error (const location_type& l,
-                          const std::string& m)
+void yy::hawk_parser::error (const location_type& l, const std::string& m)
 {
   driver.error (l, m);
 }

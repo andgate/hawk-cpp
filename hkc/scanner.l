@@ -8,7 +8,7 @@
     #include <vector>
     #include <stack>
     
-    #include "hkc/parser/driver.h"
+    #include "hkc/driver.h"
     #include "parser.hpp"
 
     // The location of the current token.
@@ -163,11 +163,11 @@ void hawk_driver::scan_begin ()
     indent_stack.push(0);
     
     yy_flex_debug = trace_scanning;
-    if (file.empty () || file == "-") {
+    if (filename.empty () || filename == "-") {
         yyin = stdin;
-    } else if(!(yyin = fopen(file.c_str(), "r")))
+    } else if(!(yyin = fopen(filename.c_str(), "r")))
     {
-        error("cannot open " + file + ": " + strerror(errno));
+        error("cannot open " + filename + ": " + strerror(errno));
         exit(EXIT_FAILURE);
     }
 }

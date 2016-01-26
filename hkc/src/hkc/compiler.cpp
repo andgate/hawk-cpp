@@ -1,5 +1,5 @@
-#include "hkc/compile.h"
-
+#include "hkc/compiler.h"
+#include "hkc/codegen.h"
 
 #include <iostream>
 #include <vector>
@@ -14,39 +14,55 @@ void hkc::Compiler::run()
 	// ----------------
 	// Compiler Process
 	// ----------------
+    
+    // 1. Parse source files, generating ast
+    parse();
+    
+    // 2. Various ast passes
+    
+    // 3. Produce the executable/library
+    produce_output();
+}
+
+void hkc::Compiler::parse()
+{
+    hawk_driver driver;
+    driver.trace_parsing = true;
+    driver.trace_scanning = true;
+    driver.print_ast = true;
+    
+    bool has_error(false);
+    for(auto in_file : build->in_files)
+    {
+        has_error = has_error & !driver.parse(in_file);
+        src_ast->modules.push_back(driver.result);
+        driver.reset();
+    }
+    
+    if(has_error) {
+        std::cerr << "Errors while parsing! Unable to continue" << std::endl;
+        exit(0);
+    }
+}
+
+void hkc::Compiler::produce_output()
+{
     fs::path build_folder("build");
-    
-    // 1. Parse execution units
-    std::vector<nmodule> modules;
-    for(const std::string& in_file : build->in_files)
-    {
-        modules.push_back(parse(in_file));
-    }
-    
-    // 2. Perform various compiler passes and checks
-    for(auto& module : modules)
-    {
-        //NodePrinter printer;
-        //block->accept(printer);
-    }
-    
-    
     std::vector<std::string> ir_files;
     
     fs::path ir_dir(build->build_dir);
     ir_dir /= "intermediates/ir";
     fs::create_directories(ir_dir);
     
-    for(auto& module : modules)
+    for(auto module : src_ast->modules)
     {
-        auto out_path = ir_dir / module->name;
+        auto out_path = ir_dir / module->id;
         out_path.replace_extension("ll");
         const std::string out_file(out_path.string());
         
-        gen_ir(module, out_file);
+        gen_ir(*module, out_file);
         ir_files.push_back(std::move(out_file));
     }
-    modules.clear();
     
     
     fs::path asm_dir(build->build_dir);
@@ -85,30 +101,10 @@ void hkc::Compiler::run()
     obj_files.clear();
 }
 
-nmodule hkc::Compiler::parse(const std::string& in_file)
-{
-    hawk_driver driver;
-    //driver.trace_parsing = true;
-    driver.trace_scanning = true;
-    
-    if(driver.parse(in_file))
-    {
-        cout << "Error building " << in_file << endl;
-        exit(0);
-    }
-    
-    fs::path in_path(in_file);
-    std::string module_name(in_path.filename().string());
-    
-    auto module = std::make_shared<NModule>(module_name, driver.result);
-    
-    return module;
-}
-
-void hkc::Compiler::gen_ir(const nmodule& module, const std::string& out_file)
+void hkc::Compiler::gen_ir(ast::Module& module, const std::string& out_file)
 {
     CodeGen gen;
-    gen.build_module(*module);
+    gen.build_module(module);
     //gen.print_ir();
     gen.write_ir(out_file);
 

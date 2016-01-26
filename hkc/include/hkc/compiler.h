@@ -1,10 +1,9 @@
-#ifndef HAWK_COMPILE_H
-#define HAWK_COMPILE_H
+#ifndef HKC_COMPILER_H
+#define HKC_COMPILER_H
 
 #include "hkc/build.h"
-#include "hkc/codegen.h"
-#include "hkc/NodePrinter.h"
-#include "hkc/parser/driver.h"
+#include "hkc/driver.h"
+#include "hkc/ast.h"
 
 #include <string>
 #include <memory>
@@ -15,16 +14,19 @@ namespace hkc
     {
     private:
         Build_ptr build;
+        ast::pSource src_ast;
         
     public:
         Compiler(Build_ptr build)
-        : build(build) {}
+        : build(build), src_ast(std::make_shared<ast::Source>()) {}
         
         void run();
         
-        nmodule parse(const std::string& in_file);
+        void parse();
         
-        void gen_ir(const nmodule& module, const std::string& out_file);
+        void produce_output();
+        
+        void gen_ir(ast::Module& module, const std::string& out_file);
         void gen_asm(const std::string& in_file, const std::string& out_file);
         void gen_obj(const std::string& in_file, const std::string& out_file);
         

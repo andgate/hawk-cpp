@@ -1,3 +1,6 @@
+#ifndef _HKC_CODEGEN_H_
+#define _HKC_CODEGEN_H_
+
 #include <stack>
 #include <typeinfo>
 #include <llvm/IR/Module.h>
@@ -17,11 +20,10 @@
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
 
-#include "hkc/parser/node.h"
+#include "hkc/ast.h"
 
 using namespace llvm;
 
-class NBlock;
 
 class CodeGenBlock {
 public:
@@ -30,7 +32,7 @@ public:
     std::map<std::string, Value*> locals;
 };
 
-class CodeGen : public Visitor
+class CodeGen : public ast::Visitor
 {
 private:
     Value* vvalue; // visit value to store visit output.
@@ -45,29 +47,32 @@ public:
     
     Module *module;
     IRBuilder<> builder;
+    std::map<std::string, AllocaInst*> named_values;
     
-    void build_module(NModule& root);
+    void build_module(ast::Module& root);
     void print_ir();
     void write_ir(const std::string& out_file);
     
-    void visit(NExpression& n) override;
-    void visit(NStatement& n) override;
-    void visit(NModule& n) override;
-    void visit(NBlock& n) override;
-    void visit(NInteger& n) override;
-    void visit(NDecimal& n) override;
-    void visit(NString& n) override;
-    void visit(NIdentifier& n) override;
-    void visit(NFunctionCall& n) override;
-    void visit(NBinaryOperator& n) override;
-    void visit(NAssignment& n) override;
-    void visit(NExpressionStatement& n) override;
-    void visit(NStatementExpression& n) override;
-    void visit(NReturnStatement& n) override;
-    void visit(NVariableDeclaration& n) override;
-    void visit(NFunctionDeclaration& n) override;
+    void visit(ast::Source& n) override;
+    void visit(ast::Module& n) override;
+    void visit(ast::IdentifierRef& n) override;
+    void visit(ast::Integer& n) override;
+    void visit(ast::Decimal& n) override;
+    void visit(ast::String& n) override;
+    void visit(ast::FunctionCall& n) override;
+    void visit(ast::BinaryOperator& n) override;
+    void visit(ast::Assignment& n) override;
+    void visit(ast::Return& n) override;
+    void visit(ast::Variable& n) override;
+    void visit(ast::GlobalVariable& n) override;
+    void visit(ast::LocalVariable& n) override;
+    void visit(ast::Function& n) override;
+    void visit(ast::GlobalFunction& n) override;
+    void visit(ast::LocalFunction& n) override;
     
-    std::map<std::string, Value*>& locals() { return blocks.top()->locals; }
+    void make_id_ref(ast::Identifier& n);
+    
+    
     
     BasicBlock *currentBlock() { return blocks.top()->block; }
     void pushBlock(BasicBlock *block) { blocks.push(new CodeGenBlock()); blocks.top()->returnValue = NULL; blocks.top()->block = block; }
@@ -77,3 +82,5 @@ public:
     Value* getCurrentReturnValue() { return blocks.top()->returnValue; }
     
 };
+
+#endif

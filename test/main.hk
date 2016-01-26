@@ -1,9 +1,11 @@
-add x y : int -> int -> int :=
+add x y : i64 -> i64 -> i64 :=
   ^ x + y
     
-some_junk : int <- 1
+//foo : i64 <- 1
 
 add_nums : void :=
   // no type inference yet
-  x : int <- add 1 2
+  x : i64 <- add 1 2
   print x
+  // no return statement, compiler should generate a blank one.
+  

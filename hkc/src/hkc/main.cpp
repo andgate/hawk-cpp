@@ -1,10 +1,11 @@
-#include <hkc/compile.h>
+#include <hkc/compiler.h>
 #include <hkc/build.h>
 
 #include <boost/program_options.hpp>
 #include <string>
 #include <iostream>
 
+using namespace std;
 namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
