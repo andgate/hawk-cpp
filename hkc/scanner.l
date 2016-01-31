@@ -28,7 +28,9 @@
 
 
 id    [a-zA-Z][a-zA-Z_0-9]*
+modid [a-zA-Z][a-zA-Z_0-9.]*
 digit [0-9]+
+op    [\!\#\$\%\&\*\+\.\/\<\=\>\?\@\\\^\|\-\~\:]+
 
 integer {digit}+
 decimal {digit}*[\.]{digit}*
@@ -100,9 +102,15 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
                 
     [\t]        driver.error(loc, "Tabs are not allowed!"); exit(0);
     
-    ":="[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_FUNDEC(loc);        
-    ":="         return yy::hawk_parser::make_FUNDEC(loc);
-    ":-"         yy_push_state(indent); return yy::hawk_parser::make_TYPDEC(loc);
+    
+    ":="[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_FUNCDEC(loc);        
+    ":="         return yy::hawk_parser::make_FUNCDEC(loc);
+    
+    ":-"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_TYPEDEC(loc);  
+    ":-"         return yy::hawk_parser::make_TYPEDEC(loc);
+    
+    "::"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_CCOLON(loc);
+    "::"         return yy::hawk_parser::make_CCOLON(loc); 
     
     "("         nesting++; return yy::hawk_parser::make_LPAREN(loc);
     ")"         nesting--; return yy::hawk_parser::make_RPAREN(loc);
@@ -114,16 +122,20 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
     "{"         return yy::hawk_parser::make_LCURLY(loc);
     "}"         return yy::hawk_parser::make_RCURLY(loc);
     "<-"        return yy::hawk_parser::make_LARROW(loc);
+    "<="        return yy::hawk_parser::make_LLARROW(loc);
     "->"        return yy::hawk_parser::make_RARROW(loc);
+    "=>"        return yy::hawk_parser::make_RRARROW(loc);
+    "."         return yy::hawk_parser::make_PERIOD(loc);
     "|"         return yy::hawk_parser::make_BAR(loc);
     "-"         return yy::hawk_parser::make_MINUS(loc);
     "+"         return yy::hawk_parser::make_PLUS(loc);
     "*"         return yy::hawk_parser::make_STAR(loc);
     "/"         return yy::hawk_parser::make_SLASH(loc);
+
     "let"       return yy::hawk_parser::make_LET(loc);
-
-
-    {id}        return yy::hawk_parser::make_IDENT(yytext, loc);
+    {id}        return yy::hawk_parser::make_ID(yytext, loc);
+    
+    {op}        return yy::hawk_parser::make_OP(yytext, loc);
     {string}    return yy::hawk_parser::make_STRING(yytext, loc);
     {integer}   return yy::hawk_parser::make_INTEGER(yytext, loc);
     {decimal}   return yy::hawk_parser::make_DECIMAL(yytext, loc);

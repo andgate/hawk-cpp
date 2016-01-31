@@ -55,6 +55,13 @@ public:
     
     void visit(ast::Source& n) override;
     void visit(ast::Module& n) override;
+    void visit(ast::Submodule& n) override;
+    
+    void visit(ast::Export& n) override;
+    void visit(ast::QExport& n) override;
+    void visit(ast::Import& n) override;
+    void visit(ast::QImport& n) override;
+    
     void visit(ast::IdentifierRef& n) override;
     void visit(ast::Integer& n) override;
     void visit(ast::Decimal& n) override;
@@ -63,9 +70,15 @@ public:
     void visit(ast::BinaryOperator& n) override;
     void visit(ast::Assignment& n) override;
     void visit(ast::Return& n) override;
+    
+    void visit(ast::Typedef& n) override;
+    void visit(ast::GlobalTypedef& n) override;
+    void visit(ast::LocalTypedef& n) override;
+    
     void visit(ast::Variable& n) override;
     void visit(ast::GlobalVariable& n) override;
     void visit(ast::LocalVariable& n) override;
+    
     void visit(ast::Function& n) override;
     void visit(ast::GlobalFunction& n) override;
     void visit(ast::LocalFunction& n) override;

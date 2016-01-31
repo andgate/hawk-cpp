@@ -1,6 +1,30 @@
 # Hawk
 Hawk is a languaged designed to function very similar to C++, but borrowing elements from Haskell's type system and clean syntax style. Hawk is intended to strike a balance between clarity and control. Check out the prototype code for examples of how a Hawk program should look. Currently the compiler needs to be built, which you can find in hawkc. As time goes on, this will eventually contain the base toolchain for development with Hawk 
 
+# Symbol List
+Hawk syntax mostly avoids the use of reserved keywords. Instead, hawk makes use of operator symbols to declare variables, functions, and data types.
+
+Module System
+.: Module
+-> Import module
+=> Import module as Qualified
+:. Submodule contains
+
+Expression System
+$  Declare Variable
+=  Assignment
+:= Define function
+^  Return
+
+Type System
+:- Record Datatype (Object) or Algebraic Datatype (enum)
+:~ Typeclass
+:+ Implementation
+<: Subtype of
+!  Immutable
+\* Pointer
+&  Reference
+
 
 # Toolchain
 Compiler: hkc

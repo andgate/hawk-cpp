@@ -1,11 +1,75 @@
-add x y : i64 -> i64 -> i64 :=
-  ^ x + y
-    
-//foo : i64 <- 1
+.: Test.Main
 
-add_nums : void :=
-  // no type inference yet
-  x : i64 <- add 1 2
-  print x
-  // no return statement, compiler should generate a blank one.
-  
+-> Math.add
+=> Math.(add sub div mul)
+
+Bool :- True | False
+
+Maybe a :- Empty | Just a
+
+not p : Bool -> Bool
+    | True  := False
+    | False := True
+
+
+Eq a :~
+    (==) a b : a -> a -> Bool :=
+        not (/=) a b
+        
+    (/=) a b : a -> a -> bool :=
+        not (/=) a b
+    
+    
+Eq Bool :+
+    a == b
+        | True  True  := True
+        | True  False := False
+        | False True  := False
+        | False False := True
+    
+Eq (Maybe a) <= Eq a :+
+    a == b
+      | Nothing  Nothing  := True
+      | Nothing  (Just _) := False
+      | (Just _) Nothing  := False
+      | (Just a) (Just b) := a == b
+
+    
+MyObject :-
+    // Define x with a type
+    - x: i32 :- 
+    
+    // Constructor
+    + MyObject x :=
+        x <- x
+    
+    @virtual
+    + doStuff :=
+        // Assignment returns nothing
+        x = x * x
+
+
+YourObject <: MyObject :-
+    - y: i32 :-
+    
+    + YourObject x y :=
+        MyObject x
+        y <- y
+        
+    @override    
+    + doStuff : void :=
+        y = y * y
+        x = x * x
+        
+
+test :.
+    add x y : i64 -> i64 -> i64 :=
+        ^ x + y
+
+    $ foo : !i32  // Mutable
+    $ bar := 2   // Constant
+
+    add_nums : void :=
+        // no type inference yet
+        x : i64 <- add 1 2
+        print x

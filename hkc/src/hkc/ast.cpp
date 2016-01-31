@@ -66,23 +66,33 @@ pFunction ast::mk_func(pNameBindings bindings, pExpressionVec exprs)
 }
 
 
-pFunction promote_global(pFunction f)
+pFunction ast::promote_global(pFunction f)
 {
     return std::make_shared<GlobalFunction>(*f);
 }
 
-pVariable promote_global(pVariable v)
+pVariable ast::promote_global(pVariable v)
 {
     return std::make_shared<GlobalVariable>(*v);
 }
 
 
-pFunction promote_local(pFunction f)
+pFunction ast::promote_local(pFunction f)
 {
     return std::make_shared<LocalFunction>(*f);
 }
 
-pVariable promote_local(pVariable v)
+pVariable ast::promote_local(pVariable v)
 {
     return std::make_shared<LocalVariable>(*v);
+}
+
+pExport ast::promote_qualified(pExport e)
+{
+    return std::make_shared<QExport>(*e);
+}
+
+pImport ast::promote_qualified(pImport i)
+{
+    return std::make_shared<QImport>(*i);
 }

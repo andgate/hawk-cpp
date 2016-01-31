@@ -12,6 +12,12 @@ namespace ast
 {
     class Source;
     class Module;
+    class Submodule;
+    class ModuleIdentifier;
+    class Export;
+    class QExport;
+    class Import;
+    class QImport;
     class Expression;
     class IdentifierRef;
     class Integer;
@@ -22,28 +28,44 @@ namespace ast
     class Assignment;
     class Return;
     class NameBindings;
+    class Typedef;
+    class GlobalTypedef;
+    class LocalTypedef;
     class Variable;
-    class LocalVariable;
     class GlobalVariable;
+    class LocalVariable;
     class Function;
-    class LocalFunction;
     class GlobalFunction;
+    class LocalFunction;
     
     typedef std::string Identifier;
     
     typedef std::shared_ptr<Source> pSource;
     typedef std::shared_ptr<Module> pModule;
+    typedef std::shared_ptr<Submodule> pSubmodule;
+    typedef std::shared_ptr<ModuleIdentifier> pModuleIdentifier;
+    typedef std::shared_ptr<Export> pExport;
+    typedef std::shared_ptr<QExport> pQExport;
+    typedef std::shared_ptr<Import> pImport;
+    typedef std::shared_ptr<QImport> pQImport;
     typedef std::shared_ptr<Expression> pExpression;
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
+    
+    typedef std::shared_ptr<Typedef> pTypedef;
+    typedef std::shared_ptr<GlobalTypedef> pGlobalTypedef;
+    typedef std::shared_ptr<LocalTypedef> pLocalTypedef;
+    
     typedef std::shared_ptr<Variable> pVariable;
-    typedef std::shared_ptr<Variable> pLocalVariable;
     typedef std::shared_ptr<Variable> pGlobalVariable;
+    typedef std::shared_ptr<Variable> pLocalVariable;
+    
     typedef std::shared_ptr<Function> pFunction;
-    typedef std::shared_ptr<Function> pLocalFunction;
     typedef std::shared_ptr<Function> pGlobalFunction;
+    typedef std::shared_ptr<Function> pLocalFunction;
     
     typedef std::vector<pModule> pModuleVec;
+    typedef std::vector<pModuleIdentifier> pModuleIdentifierVec;
     typedef std::vector<Identifier> IdentifierVec;
     typedef std::vector<pExpression> pExpressionVec;
     typedef std::vector<pVariable> pVariableVec;
@@ -51,26 +73,33 @@ namespace ast
     pVariable mk_var(pNameBindings bindings, pExpression expr);
     pFunction mk_func(pNameBindings bindings, pExpressionVec exprs);
     
-    pGlobalFunction promote_global(pFunction f);
-    pGlobalVariable promote_global(pVariable v);
+    pFunction promote_global(pFunction f);
+    pVariable promote_global(pVariable v);
     
-    pLocalFunction promote_local(pFunction f);
-    pLocalVariable promote_local(pVariable v);
+    pFunction promote_local(pFunction f);
+    pVariable promote_local(pVariable v);
+    
+    pExport promote_qualified(pExport e);
+    pImport promote_qualified(pImport i);
 
     class Visitor;
 
-    class Node {
-    public:
+    struct Node
+    {
         virtual ~Node() {}
         
         virtual void accept(Visitor& v) = 0;
     };
 
-    class Visitor
+    struct Visitor
     {
-    public:
         virtual void visit(Source& n) = 0;
         virtual void visit(Module& n) = 0;
+        virtual void visit(Submodule& n) = 0;
+        virtual void visit(Export& n) = 0;
+        virtual void visit(QExport& n) = 0;
+        virtual void visit(Import& n) = 0;
+        virtual void visit(QImport& n) = 0;
         virtual void visit(IdentifierRef& n) = 0;
         virtual void visit(Integer& n) = 0;
         virtual void visit(Decimal& n) = 0;
@@ -79,22 +108,27 @@ namespace ast
         virtual void visit(BinaryOperator& n) = 0;
         virtual void visit(Assignment& n) = 0;
         virtual void visit(Return& n) = 0;
+        
+        virtual void visit(Typedef& n) = 0;
+        virtual void visit(GlobalTypedef& n) = 0;
+        virtual void visit(LocalTypedef& n) = 0;
+        
         virtual void visit(Variable& n) = 0;
         virtual void visit(GlobalVariable& n) = 0;
         virtual void visit(LocalVariable& n) = 0;
+        
         virtual void visit(Function& n) = 0;
         virtual void visit(GlobalFunction& n) = 0;
         virtual void visit(LocalFunction& n) = 0;
     };
 
-    class Expression : public Node {
-    public:
+    struct Expression : public Node
+    {
         virtual void accept(Visitor &v) {}
     };
     
-    class Source : public Node
+    struct Source : public Node
     {
-    public:
         pModuleVec modules;
         
         Source()
@@ -103,9 +137,8 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class Module : public Node
+    struct Module : public Node
     {
-    public:
         Identifier id;
         pExpressionVec exprs;
         
@@ -115,8 +148,89 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    class IdentifierRef : public Expression {
-    public:
+    struct Submodule : public Expression
+    {
+        Identifier id;
+        pExpressionVec exprs;
+        
+        Submodule(Identifier id, pExpressionVec exprs)
+        : id(id), exprs(exprs) { }
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct ModuleIdentifier
+    {
+        Identifier id;
+        pModuleIdentifierVec subs;
+        
+        ModuleIdentifier()
+        : id(), subs() {}
+        ModuleIdentifier(Identifier id)
+        : id(id), subs() {}
+        ModuleIdentifier(Identifier id, pModuleIdentifierVec subs)
+        : id(id), subs(subs) {}
+    };
+    
+    
+    struct Export : public Expression
+    {
+        pModuleIdentifier id;
+        
+        Export()
+        : id() {}
+        
+        Export(pModuleIdentifier id)
+        : id(id) {}
+        
+        Export(const Export& ex)
+        : id(ex.id) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct QExport : public Export
+    {
+        QExport() : Export() {}
+        QExport(pModuleIdentifier id) : Export(id) {}
+        QExport(const Export& ex)
+        : Export(ex) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct Import : public Expression
+    {
+        pModuleIdentifier id;
+        
+        Import()
+        : id() {}
+        
+        Import(pModuleIdentifier id)
+        : id(id) {}
+        
+        Import(const Import& import)
+        : id(import.id) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct QImport : public Import
+    {
+        QImport()
+        : Import() {}
+        
+        QImport(pModuleIdentifier id)
+        : Import(id) {}
+        
+        QImport(const Import& import)
+        : Import(import) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct IdentifierRef : public Expression
+    {
         Identifier str;
         IdentifierRef(const Identifier& str) : str(str) { }
         IdentifierRef(IdentifierRef& ident) : str(ident.str) {}
@@ -124,32 +238,32 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class Integer : public Expression {
-    public:
+    struct Integer : public Expression
+    {
         long long int value;
         Integer(long long int value) : value(value) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class Decimal : public Expression {
-    public:
+    struct Decimal : public Expression
+    {
         long double value;
         Decimal(long double value) : value(value) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class String : public Expression {
-    public:
+    struct String : public Expression
+    {
         std::string value;
         String(const std::string& value) : value(value) {}
         
         virtual void accept(Visitor &v) {v.visit(*this); }
     };
 
-    class FunctionCall : public Expression {
-    public:
+    struct FunctionCall : public Expression
+    {
         pIdentifierRef id_ref;
         pExpressionVec arguments;
         
@@ -160,8 +274,8 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class BinaryOperator : public Expression {
-    public:
+    struct BinaryOperator : public Expression
+    {
         pExpression lhs;
         std::string op;
         pExpression rhs;
@@ -173,8 +287,8 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class Assignment : public Expression {
-    public:
+    struct Assignment : public Expression
+    {
         pIdentifierRef lhs;
         pExpression rhs;
         Assignment(pIdentifierRef lhs, pExpression rhs) : 
@@ -183,8 +297,8 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    class Return : public Expression {
-    public:
+    struct Return : public Expression
+    {
         pExpression expression;
         
         Return(pExpression expression)
@@ -193,17 +307,42 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
-    class NameBindings {
-    public:
+    struct NameBindings
+    {
         IdentifierVec ids;
         IdentifierVec typeids;
         
         NameBindings(IdentifierVec ids, IdentifierVec typeids)
         : ids(ids), typeids(typeids) {}
     };
+    
+    struct Typedef : public Expression 
+    {
+        Identifier id;
+        pExpression rhs;
+        
+        Typedef(Identifier id, pExpression rhs)
+        : id(id), rhs(rhs) { }
+        
+        Typedef(const Typedef& def)
+        : id(def.id), rhs(def.rhs) {}
+    };
+    
+    struct GlobalTypedef : public Typedef
+    {
+        GlobalTypedef(const Typedef& t) : Typedef(t) {}
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    struct LocalTypedef : public Typedef
+    {
+        LocalTypedef(const Typedef& t) : Typedef(t) {}
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
 
-    class Variable : public Expression {
-    public:
+    struct Variable : public Expression
+    {
         IdentifierVec attribs;
         Identifier id;
         Identifier type;
@@ -220,23 +359,21 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    class LocalVariable : public Variable
+    struct GlobalVariable : public Variable
     {
-    public:
-        LocalVariable(const Variable& v) : Variable(v) {}
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
-    class GlobalVariable : public Variable
-    {
-    public:
         GlobalVariable(const Variable& v) : Variable(v) {}
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
+    struct LocalVariable : public Variable
+    {
+        LocalVariable(const Variable& v) : Variable(v) {}
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
 
-    class Function : public Expression {
-    public:
+    struct Function : public Expression
+    {
         IdentifierVec attribs;
         Identifier id;
         Identifier type;
@@ -257,24 +394,22 @@ namespace ast
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    class LocalFunction : public Function
+    struct GlobalFunction : public Function
     {
-    public:
-        LocalFunction(const Function& f): Function(f) {}
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
-    class GlobalFunction : public Function
-    {
-    public:
         GlobalFunction(const Function& f): Function(f) {}
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    
-    class VisitorAdapter : public Visitor
+    struct LocalFunction : public Function
     {
-    public:
+        LocalFunction(const Function& f): Function(f) {}
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    
+    
+    struct VisitorAdapter : public Visitor
+    {
         virtual void visit(Source& n)
         {
             for(auto module : n.modules)
@@ -290,6 +425,20 @@ namespace ast
                 expr->accept(*this);
             }
         }
+        
+        virtual void visit(Submodule& n)
+        {
+            for(auto expr : n.exprs)
+            {
+                expr->accept(*this);
+            }
+        }
+        
+        virtual void visit(Export& n) {}
+        virtual void visit(QExport& n) {}
+        
+        virtual void visit(Import& n) {}
+        virtual void visit(QImport& n) {}
         
         virtual void visit(IdentifierRef& n) {}
         virtual void visit(Integer& n) {}

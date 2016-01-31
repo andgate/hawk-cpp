@@ -55,6 +55,19 @@ static Type *typeOf(const ast::Identifier& type)
     return Type::getVoidTy(getGlobalContext());
 }
 
+static Constant* getDefault(const ast::Identifier& type)
+{
+    if (type.compare("i64") == 0) {
+        return ConstantInt::get(getGlobalContext(), APInt(64, 0, true));
+    }
+    else if (type.compare("f64") == 0) {
+        return ConstantFP::get(getGlobalContext(), APFloat(0.0));
+    }
+    
+    std::cerr << "Unable to determine default of unknown type: " << type << std::endl;
+    exit(EXIT_FAILURE);
+}
+
 static AllocaInst *CreateEntryBlockAlloca(Function *function, const std::string& var_id, const std::string& type_id)
 {
     IRBuilder<> tmpB(&function->getEntryBlock(), function->getEntryBlock().begin());
@@ -78,6 +91,13 @@ void CodeGen::visit(ast::Module& n)
     
     vvalue = last;
 }
+
+void CodeGen::visit(ast::Submodule& n) {}
+
+void CodeGen::visit(ast::Export& n) {}
+void CodeGen::visit(ast::QExport& n) {}
+void CodeGen::visit(ast::Import& n) {}
+void CodeGen::visit(ast::QImport& n) {}
 
 /*void CodeGen::visit(ast::Block& n)
 {
@@ -159,12 +179,6 @@ void CodeGen::visit(ast::FunctionCall& n)
 void CodeGen::visit(ast::BinaryOperator& n)
 {
     std::cout << "Creating binary operation " << n.op << endl;
-    Instruction::BinaryOps instr;
-    
-    if(n.op == "+") instr = Instruction::Add;
-    if(n.op == "-") instr = Instruction::Sub;
-    if(n.op == "*") instr = Instruction::Mul;
-    if(n.op == "/") instr = Instruction::SDiv;
     
     n.lhs->accept(*this);
     Value* lhs_val = vvalue;
@@ -172,7 +186,26 @@ void CodeGen::visit(ast::BinaryOperator& n)
     n.rhs->accept(*this);
     Value* rhs_val = vvalue;
     
-    vvalue = BinaryOperator::Create(instr, lhs_val, rhs_val, "", currentBlock());
+    
+    if(lhs_val == 0 || rhs_val == 0)
+    {
+        std::cerr << "Error generating expressions for bin op!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    
+    if(n.op == "+")
+        vvalue = builder.CreateAdd(lhs_val, rhs_val);
+    else if(n.op == "-")
+        vvalue = builder.CreateSub(lhs_val, rhs_val);
+    else if(n.op == "*")
+        vvalue = builder.CreateMul(lhs_val, rhs_val);
+    else if(n.op == "/")
+        vvalue = builder.CreateSDiv(lhs_val, rhs_val);
+    else
+    {
+        std::cerr << "Unknown binary operator." << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 void CodeGen::visit(ast::Assignment& n)
@@ -196,9 +229,18 @@ void CodeGen::visit(ast::Return& n)
     setCurrentReturnValue(vvalue);
 }
 
-void CodeGen::visit(ast::LocalVariable& n) {}
+void CodeGen::visit(ast::Variable& n) {}
 
-void CodeGen::visit(ast::GlobalVariable& n) {}
+void CodeGen::visit(ast::GlobalVariable& n)
+{
+    GlobalVariable* gvar_ptr = new GlobalVariable(*module,typeOf(n.type),false,
+                                                  GlobalValue::CommonLinkage,
+                                                  getDefault(n.type),Twine(n.id));
+}
+
+void CodeGen::visit(ast::Typedef& n) {}
+void CodeGen::visit(ast::GlobalTypedef& n) {}
+void CodeGen::visit(ast::LocalTypedef& n) {}
 
 void CodeGen::visit(ast::LocalVariable& n)
 {
@@ -240,7 +282,7 @@ void CodeGen::visit(ast::LocalFunction& n) {}
 
 void CodeGen::visit(ast::GlobalFunction& n)
 {
-    std::cout << "Creating function: " << n.id << std::endl;
+    /*std::cout << "Creating function: " << n.id << std::endl;
     
     // Build vector of types
     vector<Type*> argTypes;
@@ -266,7 +308,7 @@ void CodeGen::visit(ast::GlobalFunction& n)
         // What is this for??
         argumentValue = argsValues++;
         argumentValue->setName(param->id.c_str());
-        StoreInst *inst = new StoreInst(argumentValue, locals()[param->id], false, bblock);
+        StoreInst *inst = new StoreInst(argumentValue, [param->id], false, bblock);
     }
     
     for(auto expr : n.exprs)
@@ -275,5 +317,5 @@ void CodeGen::visit(ast::GlobalFunction& n)
     ReturnInst::Create(getGlobalContext(), getCurrentReturnValue(), bblock);
     
     popBlock();
-    vvalue = function;
+    vvalue = function;*/
 }

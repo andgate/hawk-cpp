@@ -23,6 +23,13 @@ void Printer::visit(Module& n)
         expr->accept(*this);
 }
 
+void Printer::visit(Submodule& n) {}
+
+void Printer::visit(Export& n) {}
+void Printer::visit(QExport& n) {}
+void Printer::visit(Import& n) {}
+void Printer::visit(QImport& n) {}
+
 void Printer::visit(IdentifierRef& n)
 {
     cout << n.str;
@@ -75,7 +82,13 @@ void Printer::visit(Return& n)
     cout << ";" << endl;
 }
 
-void Printer::visit(Variable& n)
+void Printer::visit(Typedef& n) {}
+void Printer::visit(GlobalTypedef& n) {}
+void Printer::visit(LocalTypedef& n) {}
+
+void Printer::visit(Variable& n) {}
+
+void Printer::visit(GlobalVariable& n)
 {
     cout << n.id;
     if(!n.type.empty())
@@ -88,7 +101,54 @@ void Printer::visit(Variable& n)
     cout << ";" << endl;
 }
 
-void Printer::visit(Function& n)
+void Printer::visit(LocalVariable& n)
+{
+    cout << n.id;
+    if(!n.type.empty())
+    {
+        cout << ": " << n.type;
+    }
+    
+    cout << " <- ";
+    n.rhs->accept(*this);
+    cout << ";" << endl;
+}
+
+void Printer::visit(Function& n) {}
+
+void Printer::visit(GlobalFunction& n)
+{
+    // Disabling attributes for now...
+    /*if(!n.attributes.empty())
+     *   {
+     *       cout << "@";
+     *       for(auto attribute : n.attributes)
+     *       {
+     *           cout << " " << attribute->str;
+}
+
+cout << endl;
+}*/
+    
+    cout << n.id << " ";
+    for(auto param : n.params)
+        cout << param->id << " ";
+    
+    cout << ": ";
+    for(auto param : n.params)
+        cout << param->type << " -> ";
+    
+    cout << n.type;
+    
+    cout << " := { " << endl;
+    
+    for(auto expr : n.exprs)
+        expr->accept(*this);
+    
+    cout << "}" << endl;
+}
+
+void Printer::visit(LocalFunction& n)
 {
     // Disabling attributes for now...
     /*if(!n.attributes.empty())

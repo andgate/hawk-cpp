@@ -10,6 +10,7 @@ hawk_driver::hawk_driver()
 bool hawk_driver::parse(const std::string& f)
 {
     filename = f;
+    
     scan_begin();
     yy::hawk_parser parser(*this);
     parser.set_debug_level(trace_parsing);

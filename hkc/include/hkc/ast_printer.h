@@ -8,18 +8,35 @@ namespace ast
     class Printer : public Visitor
     {
     public:    
-        void visit(Source& n);
-        void visit(Module& n);
-        void visit(IdentifierRef& n);
-        void visit(Integer& n);
-        void visit(Decimal& n);
-        void visit(String& n);
-        void visit(FunctionCall& n);
-        void visit(BinaryOperator& n);
-        void visit(Assignment& n);
-        void visit(Return& n);
-        void visit(Variable& n);
-        void visit(Function& n);
+        void visit(Source& n) override;
+        void visit(Module& n) override;
+        void visit(Submodule& n) override;
+        
+        void visit(Export& n) override;
+        void visit(QExport& n) override;
+        void visit(Import& n) override;
+        void visit(QImport& n) override;
+        
+        void visit(IdentifierRef& n) override;
+        void visit(Integer& n) override;
+        void visit(Decimal& n) override;
+        void visit(String& n) override;
+        void visit(FunctionCall& n) override;
+        void visit(BinaryOperator& n) override;
+        void visit(Assignment& n) override;
+        void visit(Return& n) override;
+        
+        void visit(Typedef& n) override;
+        void visit(GlobalTypedef& n) override;
+        void visit(LocalTypedef& n) override;
+        
+        void visit(Variable& n) override;
+        void visit(GlobalVariable& n) override;
+        void visit(LocalVariable& n) override;
+        
+        void visit(Function& n) override;
+        void visit(GlobalFunction& n) override;
+        void visit(LocalFunction& n) override;
     };
 }
 
