@@ -5,6 +5,7 @@ Hawk is a languaged designed to function very similar to C++, but borrowing elem
 Hawk syntax mostly avoids the use of reserved keywords. Instead, hawk makes use of operator symbols to declare variables, functions, and data types.
 
 Module System
+
 | Symbol | Meaning |
 |   ---: | :---    |
 |     .: | Module  |
@@ -13,6 +14,7 @@ Module System
 |     :. | Submodule contains |
 
 Expression System
+
 | Symbol | Meaning |
 |   ---: | :---    |
 |      $ | Declare Variable |
@@ -21,6 +23,7 @@ Expression System
 |      ^ | Return |
 
 Type System
+
 | Symbol | Meaning |
 |   ---: | :---    |
 |     :- | Record Datatype (Object) or Algebraic Datatype (enum) |
