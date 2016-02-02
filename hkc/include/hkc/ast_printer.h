@@ -26,9 +26,9 @@ namespace ast
         void visit(Assignment& n) override;
         void visit(Return& n) override;
         
-        void visit(Typedef& n) override;
-        void visit(GlobalTypedef& n) override;
-        void visit(LocalTypedef& n) override;
+        void visit(Record& n) override;
+        void visit(TaggedUnion& n) override;
+        void visit(TaggedVariant& n) override;
         
         void visit(Variable& n) override;
         void visit(GlobalVariable& n) override;

@@ -1,7 +1,10 @@
 #include "hkc/driver.h"
 #include "parser.hpp"
-
 #include "hkc/ast_printer.h"
+
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 
 hawk_driver::hawk_driver()
 : filename(), trace_scanning (false), trace_parsing (false), print_ast(false)
@@ -10,6 +13,10 @@ hawk_driver::hawk_driver()
 bool hawk_driver::parse(const std::string& f)
 {
     filename = f;
+    
+    fs::path p(f);
+    std::string mod_name = p.filename().string();
+    result = std::make_shared<ast::Module>(mod_name, ast::pExpressionVec());
     
     scan_begin();
     yy::hawk_parser parser(*this);

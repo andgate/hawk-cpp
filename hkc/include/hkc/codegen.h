@@ -71,9 +71,9 @@ public:
     void visit(ast::Assignment& n) override;
     void visit(ast::Return& n) override;
     
-    void visit(ast::Typedef& n) override;
-    void visit(ast::GlobalTypedef& n) override;
-    void visit(ast::LocalTypedef& n) override;
+    void visit(ast::Record& n) override;
+    void visit(ast::TaggedUnion& n) override;
+    void visit(ast::TaggedVariant& n) override;
     
     void visit(ast::Variable& n) override;
     void visit(ast::GlobalVariable& n) override;

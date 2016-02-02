@@ -36,9 +36,9 @@ namespace ast
     class Assignment;
     class Return;
     class NameBindings;
-    class Typedef;
-    class GlobalTypedef;
-    class LocalTypedef;
+    class Record;
+    class TaggedUnion;
+    class TaggedVariant;
     class Variable;
     class GlobalVariable;
     class LocalVariable;
@@ -60,9 +60,9 @@ namespace ast
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
     
-    typedef std::shared_ptr<Typedef> pTypedef;
-    typedef std::shared_ptr<GlobalTypedef> pGlobalTypedef;
-    typedef std::shared_ptr<LocalTypedef> pLocalTypedef;
+    typedef std::shared_ptr<Record> pRecord;
+    typedef std::shared_ptr<TaggedUnion> pTaggedUnion;
+    typedef std::shared_ptr<TaggedVariant> pTaggedVariant;
     
     typedef std::shared_ptr<Variable> pVariable;
     typedef std::shared_ptr<Variable> pGlobalVariable;
@@ -75,6 +75,8 @@ namespace ast
     typedef std::vector<pModule> pModuleVec;
     typedef std::vector<pModuleIdentifier> pModuleIdentifierVec;
     typedef std::vector<Identifier> IdentifierVec;
+    typedef std::vector<pTaggedUnion> pTaggedUnionVec;
+    typedef std::vector<pTaggedVariant> pTaggedVariantVec;
     typedef std::vector<pExpression> pExpressionVec;
     typedef std::vector<pVariable> pVariableVec;
 }
@@ -108,29 +110,55 @@ namespace ast
 %define api.token.prefix {TOK_}
 %token
   END  0    "end of file"
-  LPAREN    "("
-  RPAREN    ")"
-  CARET     "^"
-  AT        "@"
-  SEMICOLON ";"
+  
+  PCOLON    ".:"
+  COLONP    ":."
   CCOLON    "::"
-  COLON     ":"
-  EXCLAIM   "!"
-  TYPEDEC   ":-"
+  
   FUNCDEC   ":="
-  LCURLY    "{"
-  RCURLY    "}"
+  TYPEDEC   ":-"
+  TYPECLASS ":~"
+  IMPLEMENT ":+"
+  
   LARROW    "<-"
   LLARROW   "<="
   RARROW    "->"
   RRARROW   "=>"
-  PERIOD    "."
+  SUBTYPE   "<:"
+  
+  GRAVE     "`"
+  TILDE     "~"
+  EXCLAIM   "!"
+  QUESTION  "?"
+  AT        "@"
+  POUND     "#"
+  DOLLAR    "$"
+  PERCENT   "%"
+  CARET     "^"
+  AMPERSAND "&"
+  
+  LPAREN    "("
+  RPAREN    ")"
+  LCURLY    "{"
+  RCURLY    "}"
+  LBRACKET  "["
+  RBRACKET  "]"
   BAR       "|"
+  
+  COLON     ":"
+  SEMICOLON ";"
+  PERIOD    "."
+  COMMA     ","
+  LESSER    "<"
+  GREATER   ">"
+  
   STAR      "*"
   SLASH     "/"
-  PLUS      "+" 
+  PLUS      "+"
   MINUS     "-"
-  LET       "let"
+  EQUALS    "="
+  
+  
   OPEN_BLOCK
   CLOSE_BLOCK
   OPEN_STMT
@@ -145,14 +173,17 @@ namespace ast
 %type <ast::pSubmodule> submod
 %type <ast::pModuleIdentifier> mod_id
 %type <ast::pModuleIdentifierVec> mod_ids mod_id_specifier
-%type <ast::pExport> export
 %type <ast::pImport> import
-%type <std::string> ident mod_id_base
+%type <std::string> ident mod_id_base module_name
 %type <ast::IdentifierVec> idents type_sig attribs attribs_stmt
 %type <ast::pIdentifierRef> ident_ref
-%type <ast::pExpression> primitive expr func_call top_stmt stmt
-%type <ast::pExpressionVec> exprs top_stmts stmts block
+%type <ast::pExpression> primitive expr func_call top_stmt stmt record_member typedef
+%type <ast::pExpressionVec> exprs top_stmts stmts block record_members
 %type <ast::pNameBindings> name_bindings
+%type <ast::pRecord> record
+%type <ast::pTaggedUnion> tagged_union
+%type <ast::pTaggedVariantVec> tagged_variants
+%type <ast::pTaggedVariant> tagged_variant
 %type <ast::pVariable> var_def var local_var global_var
 %type <ast::pFunction> func_def func global_func local_func
 
@@ -161,31 +192,30 @@ namespace ast
 
 
 %start module;
-module : %empty        { driver.result = std::make_shared<ast::Module>(driver.filename, ast::pExpressionVec()); }
-       | top_stmts END { driver.result = std::make_shared<ast::Module>(driver.filename, $1); }
+module : %empty                    { }
+       | top_stmts END             { driver.result->exprs = $1; }
+       | module_name top_stmts END { driver.result->id = $1; driver.result->exprs = $2; }
        ;
+       
+module_name : ".:" mod_id_base ";" { $$ = $2; };
        
        
 top_stmts : top_stmt           { $$ = ast::pExpressionVec(); $$.push_back($1); }
           | top_stmts top_stmt { $1.push_back($2); $$ = $1; }
           ;
 
-top_stmt : export          { ast::pExpression t = $1; $$ = t; }
-         | import          { ast::pExpression t = $1; $$ = t; }
+top_stmt : import          { ast::pExpression t = $1; $$ = t; }
          | global_func     { ast::pExpression t = $1; $$ = t; }
          | global_var ";"  { ast::pExpression t = $1; $$ = t; }
          | submod          { ast::pExpression t = $1; $$ = t; }
+         | typedef         { $$ = $1; }
          ;
          
-submod : mod_id_base "::" "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
-       | mod_id_base "::" top_stmt          { ast::pExpressionVec e;
+submod : mod_id_base ":." "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
+       | mod_id_base ":." top_stmt          { ast::pExpressionVec e;
                                               e.push_back($3);
                                               $$ = std::make_shared<ast::Submodule>($1, e);
                                             }
-       ;
-         
-export : "<-" mod_id ";" { $$ = std::make_shared<ast::Export>($2); }
-       | "<=" mod_id ";" { $$ = std::make_shared<ast::QExport>($2); }
        ;
        
 import : "->" mod_id ";" { $$ = std::make_shared<ast::Import>($2); }
@@ -223,15 +253,33 @@ stmt : expr ";"     { $$ = $1; }
      | local_func    { ast::pExpression t = $1; $$ = t; }
      ;
      
-     
-type_def : idents ":-"  {}
-         ;
+typedef : record       { ast::pExpression t = $1; $$ = t; }
+        | tagged_union { ast::pExpression t = $1; $$ = t; }
+        ;
         
+record : ident ":-" "{" record_members "}"  { $$ = std::make_shared<ast::Record>($1, $4); }
+       ;
 
-type_member : var
-            | func
-            ;
-     
+record_members : record_member { $$ = ast::pExpressionVec(); $$.push_back($1); }
+               | record_members record_member { $$ = $1; $$.push_back($2);}
+               ;
+               
+record_member  : global_func     { ast::pExpression t = $1; $$ = t; }
+               | global_var ";"  { ast::pExpression t = $1; $$ = t; }
+               ;
+
+tagged_union : ident ":-" "{" tagged_variants "}" { $$ = std::make_shared<ast::TaggedUnion>($1, $4); }
+             ;
+               
+tagged_variants : tagged_variant { $$ = ast::pTaggedVariantVec(); $$.push_back($1); }
+                | tagged_variants "|" tagged_variant { $1.push_back($3); $$ = $1; }
+                ;
+      
+tagged_variant : ident        { $$ = std::make_shared<ast::TaggedVariant>($1, ast::IdentifierVec()); }
+               | ident idents { $$ = std::make_shared<ast::TaggedVariant>($1, $2); }
+               ;
+               
+      
 local_var  : var { $$ = ast::promote_local($1); };
 global_var : var { $$ = ast::promote_global($1); };
 
@@ -239,9 +287,11 @@ var : var_def         { $$ = $1; }
     | attribs var_def { $2->attribs = $1; $$ = $2; }
     ;
       
-var_def : "let" name_bindings     { $$ = mk_var($2, nullptr); }
-         | name_bindings "<-" expr { $$ = mk_var($1, $3); }
-         ;
+var_def : "$" name_bindings     { $$ = mk_var($2, nullptr); }
+        | "$" name_bindings "=" expr { $$ = mk_var($2, $4); }
+        ;
+          
+
           
 local_func  : func { $$ = ast::promote_local($1); };
 global_func : func { $$ = ast::promote_global($1); };
@@ -277,7 +327,7 @@ ident_ref : ident { $$ = std::make_shared<ast::IdentifierRef>($1); };
 idents : ident        { $$ = ast::IdentifierVec(); $$.push_back($1); }
        | idents ident { $1.push_back($2); $$ = $1; }
        ;
-      
+     
 
       
 primitive : INTEGER { $$ = std::make_shared<ast::Integer>(atoll($1.c_str())); }

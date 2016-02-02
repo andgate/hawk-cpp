@@ -1,92 +1,73 @@
-// This exports the code in this file as the module "Test"
-//<- Test Another.Test
+.: Test.Main
 
-//-> fake.import
+-> Math.add
+=> Math.(add sub div mul)
 
-// Set the options for the following defition (in this case, add)
-//@ start // Declares add as an entry point. When compiled, will produce a binary that starts here.
-// This is a function definition
-// Function definitions can have an optional type signature
-// Types can be declared constant with a bang prepended.
-// Pointers can prepended to the start as well, and work just like c pointers.
-add x y : !i32 -> !i32 -> !i32 :=
-    z : Int // Delcares z, defaults to 0
-    z = x + y // This allows z to be set to a given rvalue.
-    // If multiple statements were used, a call to return is required.
+Bool :- True | False
 
-    z : Int := x + y // Shadows previous z with a new declaration
-    return z // control-flow statements like return are employed.
-    
+Maybe a :- Empty | Just a
 
-/* Multi-line comment, contains future language constructs
-// This is an enum definition
-// The lexer will attempt to parse types as
-// either objects or enums
-// Notice that case of the type doesn't matter, unlike some other languages.
-colors :- 
-{
-    Red | Blue | Green
-}
+not p : Bool -> Bool
+    | True  := False
+    | False := True
 
-Maybe a :- { Nothing | Just a }
-
-Bool :- { True | False }
-
-// Everything in a namespace needs to be indented
-:: namespace_11
-{
-  test : void :=
-  {
-    print "Hello from \"namespace1\"\n // fake comment"; // real comment
-  }
-}
-
-// This is an object definition
-SomeData :-
-// Set access 
-private:
-    // Struct containing data
-    a :: Int := 32 // Defaults to 32
-    
-    // Defines a getter and setter for the field, similar to c# properties
-    @ get set
-    c :: String // Defaults to empty string
-        // creates a public setter for c
-        set c := return this.c + c
-        // Uses the default, public getter for c
+Eq a :~
+    equals a b : a -> a -> Bool :=
+        not (equals a b)
         
-    // Function pointers can be made by wrapping the type sig in parenthesis
-    f :: (String -> String -> i32)
+    nequals a b : a -> a -> bool :=
+        not (nequals a b)
     
-    @protected // Specific access for a field
-    b :: Int // Defaults to default int, which is 0
     
-public:
-    // Constructors are special!
-    // Data can be initialized in a constructor, but only once!
-    // Order of initialization is determined from constructor
-    SomeData a b c :=
-        this.a := a
-        this.b := b
-        this.c := c
-        
-        // Do some extra construction work
-        this.y += z.size
-        
-    // Destructors are called when an object is deallocated
-    // Destructors can be deleted
-    @ disable
-    ~SomeData = delete
+Eq Bool :+
+    equals a b
+        | True  True  := True
+        | True  False := False
+        | False True  := False
+        | False False := True
+    
+Eq (Maybe a) <= Eq a :+
+    a == b
+      | Nothing  Nothing  := True
+      | Nothing  (Just _) := False
+      | (Just _) Nothing  := False
+      | (Just a) (Just b) := a == b
+    
+MyObject :-
+    // Define x with a type
+    - x: i32 :- 
+    
+    // Constructor
+    + MyObject x :=
+        x <- x
+    
+    @virtual
+    + doStuff :=
+        // Assignment returns nothing
+        x = x * x
 
-    // Undefined functions are considered abstract
-    @ abstract // Forces abstract function check
-    foo a :: !Int -> ()
-    
-OtherData :- { x : i32 := 22; }    
 
-// Inheritance is done with backwards arrow
-MyData <: SomeData :-
-    @Override
-    foo x :=
-        b += x
-*/
+YourObject <: MyObject :-
+    - y: i32 :-
+    
+    + YourObject x y :=
+        MyObject x
+        y <- y
+        
+    @override    
+    + doStuff : void :=
+        y = y * y
+        x = x * x
+        
+
+test :.
+    add x y : i64 -> i64 -> i64 :=
+        ^ x + y
+
+    $ foo : !i32  // Mutable
+    $ bar := 2   // Constant
+
+    add_nums : void :=
+        // no type inference yet
+        x : i64 <- add 1 2
+        print x

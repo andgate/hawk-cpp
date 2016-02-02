@@ -238,9 +238,9 @@ void CodeGen::visit(ast::GlobalVariable& n)
                                                   getDefault(n.type),Twine(n.id));
 }
 
-void CodeGen::visit(ast::Typedef& n) {}
-void CodeGen::visit(ast::GlobalTypedef& n) {}
-void CodeGen::visit(ast::LocalTypedef& n) {}
+void CodeGen::visit(ast::Record& n) {}
+void CodeGen::visit(ast::TaggedUnion& n) {}
+void CodeGen::visit(ast::TaggedVariant& n) {}
 
 void CodeGen::visit(ast::LocalVariable& n)
 {

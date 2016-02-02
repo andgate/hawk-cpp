@@ -28,9 +28,9 @@ namespace ast
     class Assignment;
     class Return;
     class NameBindings;
-    class Typedef;
-    class GlobalTypedef;
-    class LocalTypedef;
+    class Record;
+    class TaggedUnion;
+    class TaggedVariant;
     class Variable;
     class GlobalVariable;
     class LocalVariable;
@@ -52,9 +52,9 @@ namespace ast
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
     
-    typedef std::shared_ptr<Typedef> pTypedef;
-    typedef std::shared_ptr<GlobalTypedef> pGlobalTypedef;
-    typedef std::shared_ptr<LocalTypedef> pLocalTypedef;
+    typedef std::shared_ptr<Record> pRecord;
+    typedef std::shared_ptr<TaggedUnion> pTaggedUnion;
+    typedef std::shared_ptr<TaggedVariant> pTaggedVariant;
     
     typedef std::shared_ptr<Variable> pVariable;
     typedef std::shared_ptr<Variable> pGlobalVariable;
@@ -67,6 +67,8 @@ namespace ast
     typedef std::vector<pModule> pModuleVec;
     typedef std::vector<pModuleIdentifier> pModuleIdentifierVec;
     typedef std::vector<Identifier> IdentifierVec;
+    typedef std::vector<pTaggedUnion> pTaggedUnionVec;
+    typedef std::vector<pTaggedVariant> pTaggedVariantVec;
     typedef std::vector<pExpression> pExpressionVec;
     typedef std::vector<pVariable> pVariableVec;
     
@@ -109,9 +111,9 @@ namespace ast
         virtual void visit(Assignment& n) = 0;
         virtual void visit(Return& n) = 0;
         
-        virtual void visit(Typedef& n) = 0;
-        virtual void visit(GlobalTypedef& n) = 0;
-        virtual void visit(LocalTypedef& n) = 0;
+        virtual void visit(Record& n) = 0;
+        virtual void visit(TaggedUnion& n) = 0;
+        virtual void visit(TaggedVariant& n) = 0;
         
         virtual void visit(Variable& n) = 0;
         virtual void visit(GlobalVariable& n) = 0;
@@ -142,6 +144,8 @@ namespace ast
         Identifier id;
         pExpressionVec exprs;
         
+        Module(Identifier id)
+        : id(id), exprs() { }
         Module(Identifier id, pExpressionVec exprs)
         : id(id), exprs(exprs) { }
         
@@ -170,33 +174,6 @@ namespace ast
         : id(id), subs() {}
         ModuleIdentifier(Identifier id, pModuleIdentifierVec subs)
         : id(id), subs(subs) {}
-    };
-    
-    
-    struct Export : public Expression
-    {
-        pModuleIdentifier id;
-        
-        Export()
-        : id() {}
-        
-        Export(pModuleIdentifier id)
-        : id(id) {}
-        
-        Export(const Export& ex)
-        : id(ex.id) {}
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
-    struct QExport : public Export
-    {
-        QExport() : Export() {}
-        QExport(pModuleIdentifier id) : Export(id) {}
-        QExport(const Export& ex)
-        : Export(ex) {}
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
     struct Import : public Expression
@@ -316,31 +293,40 @@ namespace ast
         : ids(ids), typeids(typeids) {}
     };
     
-    struct Typedef : public Expression 
+    struct Record : public Expression
     {
         Identifier id;
-        pExpression rhs;
+        pExpressionVec exprs;
         
-        Typedef(Identifier id, pExpression rhs)
-        : id(id), rhs(rhs) { }
+        Record(Identifier id, pExpressionVec exprs)
+        : id(id), exprs(exprs) { }
         
-        Typedef(const Typedef& def)
-        : id(def.id), rhs(def.rhs) {}
-    };
-    
-    struct GlobalTypedef : public Typedef
-    {
-        GlobalTypedef(const Typedef& t) : Typedef(t) {}
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-    struct LocalTypedef : public Typedef
+    struct TaggedUnion : public Expression
     {
-        LocalTypedef(const Typedef& t) : Typedef(t) {}
+        Identifier id;
+        pTaggedVariantVec variants;
+        
+        TaggedUnion(Identifier id, pTaggedVariantVec variants)
+        : id(id), variants(variants) {}
+        
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
-
+    struct TaggedVariant : public Expression
+    {
+        Identifier tag;
+        IdentifierVec types;
+        
+        TaggedVariant(Identifier tag, IdentifierVec types)
+        : tag(tag), types(types) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
+    
     struct Variable : public Expression
     {
         IdentifierVec attribs;
@@ -471,6 +457,25 @@ namespace ast
         {
             n.expression->accept(*this);
         }
+        
+        
+        virtual void visit(Record& n)
+        {
+            for(auto expr : n.exprs)
+            {
+                expr->accept(*this);
+            }
+        }
+        
+        virtual void visit(TaggedUnion& n)
+        {
+            for(auto variant : n.variants)
+            {
+                variant->accept(*this);
+            }
+        }
+        
+        virtual void visit(TaggedVariant& n) {}
         
         virtual void visit(Variable& n)
         {

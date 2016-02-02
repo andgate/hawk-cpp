@@ -82,9 +82,23 @@ void Printer::visit(Return& n)
     cout << ";" << endl;
 }
 
-void Printer::visit(Typedef& n) {}
-void Printer::visit(GlobalTypedef& n) {}
-void Printer::visit(LocalTypedef& n) {}
+void Printer::visit(Record& n)
+{
+    for(auto expr : n.exprs)
+    {
+        expr->accept(*this);
+    }
+}
+
+void Printer::visit(TaggedUnion& n)
+{
+    for(auto variant : n.variants)
+    {
+        variant->accept(*this);
+    }
+}
+
+void Printer::visit(TaggedVariant& n) {}
 
 void Printer::visit(Variable& n) {}
 

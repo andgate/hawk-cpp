@@ -87,11 +87,6 @@ pVariable ast::promote_local(pVariable v)
     return std::make_shared<LocalVariable>(*v);
 }
 
-pExport ast::promote_qualified(pExport e)
-{
-    return std::make_shared<QExport>(*e);
-}
-
 pImport ast::promote_qualified(pImport i)
 {
     return std::make_shared<QImport>(*i);

@@ -98,10 +98,12 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
             
 <normal>{
 
-    \n          loc.lines(1); indent_level = 0; yy_push_state(do_bol);
-                
-    [\t]        driver.error(loc, "Tabs are not allowed!"); exit(0);
+    \n          loc.lines(1); indent_level = 0; yy_push_state(do_bol); 
+    \t          driver.error(loc, "Tabs are not allowed!"); exit(0);
     
+    ".:"         return yy::hawk_parser::make_PCOLON(loc);
+    ":."[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_CCOLON(loc);
+    ":."         return yy::hawk_parser::make_COLONP(loc);
     
     ":="[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_FUNCDEC(loc);        
     ":="         return yy::hawk_parser::make_FUNCDEC(loc);
@@ -109,32 +111,50 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
     ":-"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_TYPEDEC(loc);  
     ":-"         return yy::hawk_parser::make_TYPEDEC(loc);
     
-    "::"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_CCOLON(loc);
-    "::"         return yy::hawk_parser::make_CCOLON(loc); 
+    ":~"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_TYPECLASS(loc);
+    ":~"         return yy::hawk_parser::make_TYPECLASS(loc);
     
-    "("         nesting++; return yy::hawk_parser::make_LPAREN(loc);
-    ")"         nesting--; return yy::hawk_parser::make_RPAREN(loc);
-    "^"         return yy::hawk_parser::make_CARET(loc);
-    "@"         return yy::hawk_parser::make_AT(loc);
-    ";"         return yy::hawk_parser::make_SEMICOLON(loc);
-    ":"         return yy::hawk_parser::make_COLON(loc);
-    "!"         return yy::hawk_parser::make_EXCLAIM(loc);
-    "{"         return yy::hawk_parser::make_LCURLY(loc);
-    "}"         return yy::hawk_parser::make_RCURLY(loc);
+    ":+"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_IMPLEMENT(loc);
+    ":+"         return yy::hawk_parser::make_IMPLEMENT(loc);
+    
     "<-"        return yy::hawk_parser::make_LARROW(loc);
     "<="        return yy::hawk_parser::make_LLARROW(loc);
     "->"        return yy::hawk_parser::make_RARROW(loc);
     "=>"        return yy::hawk_parser::make_RRARROW(loc);
-    "."         return yy::hawk_parser::make_PERIOD(loc);
+    "<:"        return yy::hawk_parser::make_SUBTYPE(loc);
+    
+    "`"         return yy::hawk_parser::make_GRAVE(loc);
+    "~"         return yy::hawk_parser::make_TILDE(loc);
+    "!"         return yy::hawk_parser::make_EXCLAIM(loc);
+    "?"         return yy::hawk_parser::make_QUESTION(loc);
+    "@"         return yy::hawk_parser::make_AT(loc);
+    "#"         return yy::hawk_parser::make_POUND(loc);
+    "$"         return yy::hawk_parser::make_DOLLAR(loc);
+    "^"         return yy::hawk_parser::make_CARET(loc);
+    "&"         return yy::hawk_parser::make_AMPERSAND(loc);
+    
+    "("         nesting++; return yy::hawk_parser::make_LPAREN(loc);
+    ")"         nesting--; return yy::hawk_parser::make_RPAREN(loc);
+    "{"         return yy::hawk_parser::make_LCURLY(loc);
+    "}"         return yy::hawk_parser::make_RCURLY(loc);
+    "["         return yy::hawk_parser::make_LBRACKET(loc);
+    "]"         return yy::hawk_parser::make_RBRACKET(loc);
     "|"         return yy::hawk_parser::make_BAR(loc);
+    
+    ":"         return yy::hawk_parser::make_COLON(loc);
+    ";"         return yy::hawk_parser::make_SEMICOLON(loc);
+    "."         return yy::hawk_parser::make_PERIOD(loc);
+    ","         return yy::hawk_parser::make_COMMA(loc);
+    "<"         return yy::hawk_parser::make_LESSER(loc);
+    ">"         return yy::hawk_parser::make_GREATER(loc);
+    
     "-"         return yy::hawk_parser::make_MINUS(loc);
     "+"         return yy::hawk_parser::make_PLUS(loc);
     "*"         return yy::hawk_parser::make_STAR(loc);
     "/"         return yy::hawk_parser::make_SLASH(loc);
-
-    "let"       return yy::hawk_parser::make_LET(loc);
-    {id}        return yy::hawk_parser::make_ID(yytext, loc);
+    "="         return yy::hawk_parser::make_EQUALS(loc);
     
+    {id}        return yy::hawk_parser::make_ID(yytext, loc);
     {op}        return yy::hawk_parser::make_OP(yytext, loc);
     {string}    return yy::hawk_parser::make_STRING(yytext, loc);
     {integer}   return yy::hawk_parser::make_INTEGER(yytext, loc);
