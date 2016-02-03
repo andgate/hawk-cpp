@@ -14,14 +14,29 @@
     // The location of the current token.
     static yy::location loc;
     
-    std::stack<unsigned int> indent_stack;
-    unsigned int indent_level = 0;
-    unsigned int nesting = 0;
+    enum Scheme {
+        ROOT,
+        FLOAT,
+        ALIGN
+    };
+    
+    struct Layout
+    {
+        unsigned int column;
+        Scheme scheme;
+        
+        Layout(unsigned int column, Scheme scheme)
+        : column(column), scheme(scheme) {}
+    };
+    
+    std::stack<Layout> lstack;
 %}
 
 %x do_bol
-%x indent
-%x ml_com
+%x layout_align
+%x layout_float
+%x inline_comment
+%x block_comment
 %s normal
 
 %option noyywrap yylineno stack batch debug
@@ -37,8 +52,7 @@ decimal {digit}*[\.]{digit}*
 
 string \"(\\.|[^\\"])*\"
 
-comment     "//".*
-ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
+inline_comment     "//".*
 
 %{
     #define YY_USER_ACTION loc.columns(yyleng);
@@ -53,69 +67,93 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
     loc.step();
 %}
 
-
-<*>^[ ]*\n              loc.lines(1); indent_level = 0;
-<*>^[ ]*{comment}"\n"   loc.lines(1); indent_level = 0;
-<*>{comment}            {}
-"/*"                    yy_push_state(ml_com);
-
 <do_bol>{
-    ^[ ]*   indent_level = yyleng - 1;
-    "\n"    loc.lines(1); indent_level = 0;
-    "/*"    yy_push_state(ml_com);
+    ^[ ]*   loc.step();
+    "\n"    loc.lines(1); loc.step();
+    "/*"    yy_push_state(block_comment);
+    "//"    yy_push_state(inline_comment);
     .       {
                 unput(*yytext);
                 
-                if(indent_stack.size() > 1)
+                // Try to remove invalid scopes
+                if(lstack.size() > 1)
                 {
-                    while(indent_level < indent_stack.top())
+                    std::cout << "Checking for layouts that close on column " << loc.begin.column << std::endl;
+                    while(loc.begin.column < lstack.top().column)
                     {
-                        indent_stack.pop();
+                        Layout l = lstack.top();
+                        std::cout << "Closing ";
+                        if(l.scheme == FLOAT)
+                            std::cout << "floating layout";
+                        if(l.scheme == ALIGN)
+                            std::cout << "aligned layout";
+                            
+                        std::cout << " on column " << l.column << std::endl;
+                        
+                        lstack.pop();
                         unput('}');
                     }
+                    
                 }
                 
-                if(indent_level == indent_stack.top())
-                    unput(';');
-                
                 yy_pop_state();
+                
+                if(lstack.top().scheme == ALIGN
+                   && lstack.top().column == loc.begin.column)
+                {
+                    yy_push_state(layout_float);
+                }
             }
 }
 
-<indent>{
-    ^[ ]*   indent_level = yyleng - 1;
-    "\n"    loc.lines(1); indent_level = 0;
-    "/*"    yy_push_state(ml_com);
+<layout_align>{
+    ^[ ]*   loc.step();
+    "\n"    loc.lines(1); loc.step();
+    "/*"    yy_push_state(block_comment);
+    "//"    yy_push_state(inline_comment);
     .       {
-                yyless(0);
-                indent_stack.push(indent_level);
+                unput(*yytext);
+                unput('{');
+                lstack.push(Layout(loc.begin.column, Scheme::ALIGN));
+                
+                std::cout << "Creating aligned layout on column " << loc.begin.column-1 << std::endl;
                 
                 yy_pop_state();
-                return yy::hawk_parser::make_LCURLY(loc);
+            }
+
+}
+
+<layout_float>{
+    ^[ ]*   loc.step();
+    "\n"    loc.lines(1); loc.step();
+    "/*"    yy_push_state(block_comment);
+    "//"    yy_push_state(inline_comment);
+    .       {
+                unput(*yytext);
+                unput('{');
+                lstack.push(Layout(lstack.top().column+1, Scheme::FLOAT));
+                
+                std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                
+                yy_pop_state();
             }
 
 }
             
 <normal>{
 
-    \n          loc.lines(1); indent_level = 0; yy_push_state(do_bol); 
+    [ ]         loc.step();
+    \n          loc.lines(1); loc.step(); yy_push_state(do_bol); 
     \t          driver.error(loc, "Tabs are not allowed!"); exit(0);
+    "/*"        yy_push_state(block_comment);
+    "//"        yy_push_state(inline_comment);
     
-    ".:"         return yy::hawk_parser::make_PCOLON(loc);
-    ":."[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_CCOLON(loc);
-    ":."         return yy::hawk_parser::make_COLONP(loc);
-    
-    ":="[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_FUNCDEC(loc);        
-    ":="         return yy::hawk_parser::make_FUNCDEC(loc);
-    
-    ":-"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_TYPEDEC(loc);  
-    ":-"         return yy::hawk_parser::make_TYPEDEC(loc);
-    
-    ":~"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_TYPECLASS(loc);
-    ":~"         return yy::hawk_parser::make_TYPECLASS(loc);
-    
-    ":+"[ ]*"\n" yy_push_state(indent); loc.lines(1); return yy::hawk_parser::make_IMPLEMENT(loc);
-    ":+"         return yy::hawk_parser::make_IMPLEMENT(loc);
+    ".:"        return yy::hawk_parser::make_PCOLON(loc);
+    ":."        yy_push_state(layout_float); return yy::hawk_parser::make_CCOLON(loc);
+    ":="        yy_push_state(layout_align); return yy::hawk_parser::make_FUNCDEC(loc);
+    ":-"        yy_push_state(layout_float); return yy::hawk_parser::make_TYPEDEC(loc);
+    ":~"        yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
+    ":+"        yy_push_state(layout_float); return yy::hawk_parser::make_IMPLEMENT(loc);
     
     "<-"        return yy::hawk_parser::make_LARROW(loc);
     "<="        return yy::hawk_parser::make_LLARROW(loc);
@@ -133,10 +171,10 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
     "^"         return yy::hawk_parser::make_CARET(loc);
     "&"         return yy::hawk_parser::make_AMPERSAND(loc);
     
-    "("         nesting++; return yy::hawk_parser::make_LPAREN(loc);
-    ")"         nesting--; return yy::hawk_parser::make_RPAREN(loc);
-    "{"         return yy::hawk_parser::make_LCURLY(loc);
-    "}"         return yy::hawk_parser::make_RCURLY(loc);
+    "{"         loc.columns(-1); return yy::hawk_parser::make_LCURLY(loc);
+    "}"         loc.columns(-1); return yy::hawk_parser::make_RCURLY(loc);
+    "("         return yy::hawk_parser::make_LPAREN(loc);
+    ")"         return yy::hawk_parser::make_RPAREN(loc);
     "["         return yy::hawk_parser::make_LBRACKET(loc);
     "]"         return yy::hawk_parser::make_RBRACKET(loc);
     "|"         return yy::hawk_parser::make_BAR(loc);
@@ -155,35 +193,36 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
     "="         return yy::hawk_parser::make_EQUALS(loc);
     
     {id}        return yy::hawk_parser::make_ID(yytext, loc);
-    {op}        return yy::hawk_parser::make_OP(yytext, loc);
     {string}    return yy::hawk_parser::make_STRING(yytext, loc);
     {integer}   return yy::hawk_parser::make_INTEGER(yytext, loc);
     {decimal}   return yy::hawk_parser::make_DECIMAL(yytext, loc);
 }
 
-<ml_com>{
+<block_comment>{
     [^*\n]*         /* eat anything not a '*' */
     "*"+[^*/\n]*    /* eat anything not follow by '/'s */ 
-    \n              loc.lines(1);
-    "*"+"/"         yy_pop_state();
+    \n              loc.lines(1); loc.step();
+    "*"+"/"         yy_pop_state(); loc.step();
+}
+
+<inline_comment>{
+    \n              loc.step(); yy_pop_state(); unput('\n');
+    .*              /* consume everything else */
 }
 
 [.\n]           { driver.error (loc, "invalid character"); }
 <<EOF>>         {
-                    if(indent_stack.size() == 1)
+                    if(lstack.size() == 1)
                         return yy::hawk_parser::make_END(loc);
                         
                     unput(NULL);
                     
-                    while(indent_stack.size() > 1)
+                    while(lstack.size() > 1)
                     {
-                        indent_stack.pop();
+                        lstack.pop();
                         unput('}');
                     }
-                    
-                    std::cout << "Indent Level: " << indent_level << std::endl;
-                    
-                    unput(';');
+                    //std::cout << "Indent Level: " << ilevel << std::endl;
                 }
 
 %%
@@ -192,7 +231,7 @@ ml_comment  [/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]
 void hawk_driver::scan_begin ()
 {
     yy_push_state(normal);
-    indent_stack.push(0);
+    lstack.push(Layout(1, Scheme::ROOT));
     
     yy_flex_debug = trace_scanning;
     if (filename.empty () || filename == "-") {

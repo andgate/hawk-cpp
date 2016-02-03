@@ -197,29 +197,25 @@ module : %empty                    { }
        | module_name top_stmts END { driver.result->id = $1; driver.result->exprs = $2; }
        ;
        
-module_name : ".:" mod_id_base ";" { $$ = $2; };
+module_name : ".:" mod_id_base { $$ = $2; };
        
        
 top_stmts : top_stmt           { $$ = ast::pExpressionVec(); $$.push_back($1); }
           | top_stmts top_stmt { $1.push_back($2); $$ = $1; }
           ;
 
-top_stmt : import          { ast::pExpression t = $1; $$ = t; }
-         | global_func     { ast::pExpression t = $1; $$ = t; }
-         | global_var ";"  { ast::pExpression t = $1; $$ = t; }
-         | submod          { ast::pExpression t = $1; $$ = t; }
-         | typedef         { $$ = $1; }
+top_stmt : import      { ast::pExpression t = $1; $$ = t; }
+         | global_func { ast::pExpression t = $1; $$ = t; }
+         | global_var  { ast::pExpression t = $1; $$ = t; }
+         | submod      { ast::pExpression t = $1; $$ = t; }
+         | typedef     { $$ = $1; }
          ;
          
 submod : mod_id_base ":." "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
-       | mod_id_base ":." top_stmt          { ast::pExpressionVec e;
-                                              e.push_back($3);
-                                              $$ = std::make_shared<ast::Submodule>($1, e);
-                                            }
        ;
        
-import : "->" mod_id ";" { $$ = std::make_shared<ast::Import>($2); }
-       | "=>" mod_id ";" { $$ = std::make_shared<ast::QImport>($2); }
+import : "->" mod_id { $$ = std::make_shared<ast::Import>($2); }
+       | "=>" mod_id { $$ = std::make_shared<ast::QImport>($2); }
        ;
        
 mod_ids : mod_id         { $$ = ast::pModuleIdentifierVec(); $$.push_back($1); }
@@ -240,22 +236,23 @@ attribs : attribs_stmt         { $$ = $1; }
         | attribs attribs_stmt { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }
         ;
 
-attribs_stmt : "@" idents ";" { $$ = $2; };
+attribs_stmt : "@" "{" idents "}" { $$ = $3; };
 
              
 stmts : stmt       { $$ = ast::pExpressionVec(); $$.push_back($1); }
       | stmts stmt { $1.push_back($2); $$ = $1; }
       ;
 
-stmt : expr ";"     { $$ = $1; }
-     | "^" expr ";" { $$ = std::make_shared<ast::Return>($2); }
-     | local_var ";" { ast::pExpression t = $1; $$ = t; }
-     | local_func    { ast::pExpression t = $1; $$ = t; }
+stmt : "{" expr "}"     { $$ = $2; }
+     | "{" "^" expr "}" { $$ = std::make_shared<ast::Return>($3); }
+     | "{" local_var "}" { ast::pExpression t = $2; $$ = t; }
+     | "{" local_func "}"    { ast::pExpression t = $2; $$ = t; }
      ;
      
 typedef : record       { ast::pExpression t = $1; $$ = t; }
         | tagged_union { ast::pExpression t = $1; $$ = t; }
         ;
+        
         
 record : ident ":-" "{" record_members "}"  { $$ = std::make_shared<ast::Record>($1, $4); }
        ;
@@ -268,6 +265,7 @@ record_member  : global_func     { ast::pExpression t = $1; $$ = t; }
                | global_var ";"  { ast::pExpression t = $1; $$ = t; }
                ;
 
+               
 tagged_union : ident ":-" "{" tagged_variants "}" { $$ = std::make_shared<ast::TaggedUnion>($1, $4); }
              ;
                
@@ -287,8 +285,8 @@ var : var_def         { $$ = $1; }
     | attribs var_def { $2->attribs = $1; $$ = $2; }
     ;
       
-var_def : "$" name_bindings     { $$ = mk_var($2, nullptr); }
-        | "$" name_bindings "=" expr { $$ = mk_var($2, $4); }
+var_def : "$" "{" name_bindings "}"          { $$ = mk_var($3, nullptr); }
+        | "$" "{" name_bindings "=" expr "}" { $$ = mk_var($3, $5); }
         ;
           
 
@@ -301,14 +299,10 @@ func : func_def         { $$ = $1; }
      ;
       
 func_def : name_bindings ":=" block { $$ = ast::mk_func($1, $3); }
-          | name_bindings ":=" stmt  { ast::pExpressionVec exprs;
-                                       exprs.push_back($3);
-                                       $$ = ast::mk_func($1, exprs);
-                                     }
-          ;
+         ;
           
-block : LCURLY RCURLY       { $$ = ast::pExpressionVec(); }
-      | LCURLY stmts RCURLY { $$ = $2; }
+block : "{" "}"       { $$ = ast::pExpressionVec(); }
+      | "{" stmts "}" { $$ = $2; }
       ;
 
 name_bindings : idents ":" type_sig { $$ = std::make_shared<ast::NameBindings>($1, $3); }

@@ -1,25 +1,28 @@
+// Start of root indent
 .: Test.Main
 
 -> Math.add
 => Math.(add sub div mul)
 
-Bool :- True | False
+Bool :-
+    True
+        |
+ False
     
-MyObject :-
+MyObject :- // floating indent, doesn't wrap statements, closes when line reaches starting column. 
     // Define x with a type
-    $ x: i32
+    $ x: i32 // Creates a floating indent
     $ y: i32
+    
+    add : i64 := // Aligned indent, wraps statements in floating indents when new lines are on the same column, closes when indent level is reduced. 
+        ^ x + y
         
 
 test :.
-    add x y : i64 -> i64 -> i64 :=
-        ^ x + y
-
     $ foo : !i32  // Constant
     $ bar := 2    // Mutable
 
     add_nums : void :=
-        // no type inference yet
-        x : i64 <- add 1 2
-        MyObject 17 19
+        $ obj = MyObject 17 19
+        $ x = obj.add
         print x
