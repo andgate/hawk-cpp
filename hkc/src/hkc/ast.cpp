@@ -24,7 +24,7 @@ pVariable ast::mk_var(pNameBindings bindings, pExpression expr)
     return std::make_shared<Variable>(var_id, type_id, expr);
 }
 
-pFunction ast::mk_func(pNameBindings bindings, pExpressionVec exprs)
+pFunction ast::mk_func(pNameBindings bindings, pExpressionGroup statements)
 {
     Identifier func_id = bindings->ids.front();
     uint param_id_count;
@@ -62,7 +62,7 @@ pFunction ast::mk_func(pNameBindings bindings, pExpressionVec exprs)
         params.push_back(std::make_shared<Variable>(param_name, param_type));
     }
     
-    return std::make_shared<Function>(func_id, func_type, params, exprs);
+    return std::make_shared<Function>(func_id, func_type, params, statements);
 }
 
 

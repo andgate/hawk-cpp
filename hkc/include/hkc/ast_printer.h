@@ -2,18 +2,21 @@
 #define _HKC_AST_PRINTER_H_
 
 #include "hkc/ast.h"
+#include <string>
 
 namespace ast
 {
     class Printer : public Visitor
     {
-    public:    
+    public:
+        Printer(): ws(), curr_indent(0) {}
+        
+        void visit(ExpressionGroup& n) override;
+        
         void visit(Source& n) override;
         void visit(Module& n) override;
         void visit(Submodule& n) override;
         
-        void visit(Export& n) override;
-        void visit(QExport& n) override;
         void visit(Import& n) override;
         void visit(QImport& n) override;
         
@@ -37,6 +40,13 @@ namespace ast
         void visit(Function& n) override;
         void visit(GlobalFunction& n) override;
         void visit(LocalFunction& n) override;
+        
+    private:
+        std::string ws;
+        int curr_indent;
+        
+        void indent();
+        void undent();
     };
 }
 

@@ -16,13 +16,13 @@ bool hawk_driver::parse(const std::string& f)
     
     fs::path p(f);
     std::string mod_name = p.filename().string();
-    result = std::make_shared<ast::Module>(mod_name, ast::pExpressionVec());
+    result = std::make_shared<ast::Module>(mod_name, std::make_shared<ast::ExpressionGroup>());
     
     scan_begin();
     yy::hawk_parser parser(*this);
     parser.set_debug_level(trace_parsing);
     int res = parser.parse();
-    scan_end ();
+    scan_end();
     
     if(print_ast)
     {

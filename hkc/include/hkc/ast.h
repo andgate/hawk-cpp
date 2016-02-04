@@ -10,12 +10,11 @@
 
 namespace ast
 {
+    class ExpressionGroup;
     class Source;
     class Module;
     class Submodule;
     class ModuleIdentifier;
-    class Export;
-    class QExport;
     class Import;
     class QImport;
     class Expression;
@@ -44,11 +43,10 @@ namespace ast
     typedef std::shared_ptr<Module> pModule;
     typedef std::shared_ptr<Submodule> pSubmodule;
     typedef std::shared_ptr<ModuleIdentifier> pModuleIdentifier;
-    typedef std::shared_ptr<Export> pExport;
-    typedef std::shared_ptr<QExport> pQExport;
     typedef std::shared_ptr<Import> pImport;
     typedef std::shared_ptr<QImport> pQImport;
     typedef std::shared_ptr<Expression> pExpression;
+    typedef std::shared_ptr<ExpressionGroup> pExpressionGroup;
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
     
@@ -73,7 +71,7 @@ namespace ast
     typedef std::vector<pVariable> pVariableVec;
     
     pVariable mk_var(pNameBindings bindings, pExpression expr);
-    pFunction mk_func(pNameBindings bindings, pExpressionVec exprs);
+    pFunction mk_func(pNameBindings bindings, pExpressionGroup statements);
     
     pFunction promote_global(pFunction f);
     pVariable promote_global(pVariable v);
@@ -81,7 +79,6 @@ namespace ast
     pFunction promote_local(pFunction f);
     pVariable promote_local(pVariable v);
     
-    pExport promote_qualified(pExport e);
     pImport promote_qualified(pImport i);
 
     class Visitor;
@@ -95,11 +92,10 @@ namespace ast
 
     struct Visitor
     {
+        virtual void visit(ExpressionGroup& n) = 0;
         virtual void visit(Source& n) = 0;
         virtual void visit(Module& n) = 0;
         virtual void visit(Submodule& n) = 0;
-        virtual void visit(Export& n) = 0;
-        virtual void visit(QExport& n) = 0;
         virtual void visit(Import& n) = 0;
         virtual void visit(QImport& n) = 0;
         virtual void visit(IdentifierRef& n) = 0;
@@ -129,6 +125,17 @@ namespace ast
         virtual void accept(Visitor &v) {}
     };
     
+    struct ExpressionGroup : public Expression
+    {
+        pExpressionVec exprs;
+        
+        ExpressionGroup() : exprs() {}
+        ExpressionGroup(pExpressionVec exprs) : exprs(exprs) {}
+        ExpressionGroup(pExpressionGroup group) : exprs(group->exprs) {}
+        
+        virtual void accept(Visitor &v) { v.visit(*this); }
+    };
+    
     struct Source : public Node
     {
         pModuleVec modules;
@@ -142,12 +149,12 @@ namespace ast
     struct Module : public Node
     {
         Identifier id;
-        pExpressionVec exprs;
+        pExpressionGroup group;
         
         Module(Identifier id)
-        : id(id), exprs() { }
-        Module(Identifier id, pExpressionVec exprs)
-        : id(id), exprs(exprs) { }
+        : id(id), group() { }
+        Module(Identifier id, pExpressionGroup group)
+        : id(id), group(group) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -155,10 +162,10 @@ namespace ast
     struct Submodule : public Expression
     {
         Identifier id;
-        pExpressionVec exprs;
+        pExpressionGroup group;
         
-        Submodule(Identifier id, pExpressionVec exprs)
-        : id(id), exprs(exprs) { }
+        Submodule(Identifier id, pExpressionGroup group)
+        : id(id), group(group) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -242,10 +249,10 @@ namespace ast
     struct FunctionCall : public Expression
     {
         pIdentifierRef id_ref;
-        pExpressionVec arguments;
+        pExpressionGroup arguments;
         
         FunctionCall(pIdentifierRef id_ref) : id_ref(id_ref), arguments() { }
-        FunctionCall(pIdentifierRef id_ref, pExpressionVec arguments)
+        FunctionCall(pIdentifierRef id_ref, pExpressionGroup arguments)
         : id_ref(id_ref), arguments(arguments) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
@@ -296,10 +303,10 @@ namespace ast
     struct Record : public Expression
     {
         Identifier id;
-        pExpressionVec exprs;
+        pExpressionGroup group;
         
-        Record(Identifier id, pExpressionVec exprs)
-        : id(id), exprs(exprs) { }
+        Record(Identifier id, pExpressionGroup group)
+        : id(id), group(group) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -364,18 +371,18 @@ namespace ast
         Identifier id;
         Identifier type;
         pVariableVec params;
-        pExpressionVec exprs;
+        pExpressionGroup statements;
         
         
         Function(Identifier id, Identifier type,
                             pVariableVec params,
-                            pExpressionVec exprs)
+                 pExpressionGroup statements)
         : attribs(), id(id), type(type)
-        , params(params), exprs(exprs) {}
+        , params(params), statements(statements) {}
         
         Function(const Function& f)
         : attribs(f.attribs), id(f.id), type(f.type)
-        , params(f.params), exprs(f.exprs) {}
+        , params(f.params), statements(f.statements) {}
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -396,6 +403,14 @@ namespace ast
     
     struct VisitorAdapter : public Visitor
     {
+        virtual void visit(ExpressionGroup& n)
+        {
+            for(auto expr : n.exprs)
+            {
+                expr->accept(*this);
+            }
+        }
+        
         virtual void visit(Source& n)
         {
             for(auto module : n.modules)
@@ -406,22 +421,13 @@ namespace ast
         
         virtual void visit(Module& n)
         {
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.group->accept(*this);
         }
         
         virtual void visit(Submodule& n)
         {
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.group->accept(*this);
         }
-        
-        virtual void visit(Export& n) {}
-        virtual void visit(QExport& n) {}
         
         virtual void visit(Import& n) {}
         virtual void visit(QImport& n) {}
@@ -434,11 +440,7 @@ namespace ast
         virtual void visit(FunctionCall& n)
         {
             n.id_ref->accept(*this);
-            
-            for(auto argument : n.arguments)
-            {
-                argument->accept(*this);
-            }
+            n.arguments->accept(*this);
         }
         
         virtual void visit(BinaryOperator& n)
@@ -461,10 +463,7 @@ namespace ast
         
         virtual void visit(Record& n)
         {
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.group->accept(*this);
         }
         
         virtual void visit(TaggedUnion& n)
@@ -499,10 +498,7 @@ namespace ast
                 param->accept(*this);
             }
             
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.statements->accept(*this);
         }
         
         virtual void visit(GlobalFunction& n)
@@ -512,10 +508,7 @@ namespace ast
                 param->accept(*this);
             }
             
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.statements->accept(*this);
         }
         
         virtual void visit(LocalFunction& n)
@@ -525,10 +518,7 @@ namespace ast
                 param->accept(*this);
             }
             
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
+            n.statements->accept(*this);
         }
     };
 }

@@ -30,6 +30,12 @@
     };
     
     std::stack<Layout> lstack;
+    
+    void print_curr_loc();
+    
+    
+    void step_tok();
+    void skip_loc();
 %}
 
 %x do_bol
@@ -55,7 +61,9 @@ string \"(\\.|[^\\"])*\"
 inline_comment     "//".*
 
 %{
-    #define YY_USER_ACTION loc.columns(yyleng);
+    // Code run each time a pattern is matched
+    //#define YY_USER_ACTION      \
+        
 %}
 
 
@@ -68,134 +76,186 @@ inline_comment     "//".*
 %}
 
 <do_bol>{
-    ^[ ]*   loc.step();
-    "\n"    loc.lines(1); loc.step();
-    "/*"    yy_push_state(block_comment);
-    "//"    yy_push_state(inline_comment);
+    [ ]*   step_tok();
+    "\n"    step_tok(); loc.lines(1);
+    "/*"    step_tok(); yy_push_state(block_comment);
+    "//"    step_tok(); yy_push_state(inline_comment);
     .       {
-                unput(*yytext);
-                
-                // Try to remove invalid scopes
-                if(lstack.size() > 1)
-                {
-                    std::cout << "Checking for layouts that close on column " << loc.begin.column << std::endl;
-                    while(loc.begin.column < lstack.top().column)
-                    {
-                        Layout l = lstack.top();
-                        std::cout << "Closing ";
-                        if(l.scheme == FLOAT)
-                            std::cout << "floating layout";
-                        if(l.scheme == ALIGN)
-                            std::cout << "aligned layout";
-                            
-                        std::cout << " on column " << l.column << std::endl;
-                        
-                        lstack.pop();
-                        unput('}');
-                    }
-                    
-                }
+                // Get the current character's position
+                step_tok();
                 
                 yy_pop_state();
                 
-                if(lstack.top().scheme == ALIGN
-                   && lstack.top().column == loc.begin.column)
+                std::string yytext_old(yytext);
+                std::string out_buf;
+                
+                // Attempt to remove invalid layouts
+                bool checkingInvalid = true;
+                std::cout << "Checking for layouts that close left of column " << loc.begin.column << std::endl;
+                while(checkingInvalid)
                 {
-                    yy_push_state(layout_float);
+                    Layout l = lstack.top();
+                    
+                    switch(l.scheme)
+                    {
+                    case ROOT:
+                        checkingInvalid = false; // Root scheme is never invalid
+                        break;
+                    case FLOAT:
+                        // Check to see if out of bounds
+                        if(l.column >=  loc.begin.column)
+                        {
+                            // Close floating layout
+                            std::cout << "Closing floating layout on column " << l.column << std::endl;
+                            lstack.pop();
+                            out_buf += '}';
+                        } else { checkingInvalid = false; }
+                        break;
+                    case ALIGN:
+                        // Check to see if out of bounds
+                        if(l.column > loc.begin.column)
+                        {
+                            // Close aligned layout
+                            std::cout << "Closing aligned layout on column " << l.column << std::endl;
+                            lstack.pop();
+                            out_buf += '}';
+                        } else { checkingInvalid = false; }
+                        break;
+                    }
                 }
+                
+                // An aligned layout is the signal to start a new floating layout.
+                if(lstack.top().scheme == Scheme::ALIGN && lstack.top().column == loc.begin.column)
+                {
+                    // Manually add a new layout to the stack
+                    lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
+                    std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                    // Add the start of the new layout to the buffer
+                    out_buf += '{';
+                }
+                
+                // Add the yytext to the buffer.
+                out_buf += yytext_old;
+                
+                std::cout << "Out buffer contains \"" << out_buf << "\"" << std::endl;
+                
+                for(auto it = out_buf.rbegin(); it != out_buf.rend(); ++it)
+                    unput(*it);
+
+                // Set the location back one character.
+                loc -= 1;
+                loc.step(); 
             }
+            
+    <<EOF>> yy_pop_state();
 }
 
 <layout_align>{
-    ^[ ]*   loc.step();
-    "\n"    loc.lines(1); loc.step();
-    "/*"    yy_push_state(block_comment);
-    "//"    yy_push_state(inline_comment);
+    [ ]*    step_tok();
+    "\n"    step_tok(); loc.lines(1);
+    "/*"    step_tok(); yy_push_state(block_comment);
+    "//"    step_tok(); yy_push_state(inline_comment);
     .       {
+                step_tok();
+                
                 unput(*yytext);
-                unput('{');
-                lstack.push(Layout(loc.begin.column, Scheme::ALIGN));
-                
-                std::cout << "Creating aligned layout on column " << loc.begin.column-1 << std::endl;
-                
                 yy_pop_state();
+                
+                unput('{');
+                unput('{');
+                
+                lstack.push(Layout(loc.begin.column, Scheme::ALIGN));
+                std::cout << "Creating aligned layout on column " << lstack.top().column << std::endl;
+                lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
+                std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                
+                loc -= 1;
+                loc.step(); 
             }
-
+            
+    <<EOF>> yy_pop_state();
 }
 
 <layout_float>{
-    ^[ ]*   loc.step();
-    "\n"    loc.lines(1); loc.step();
-    "/*"    yy_push_state(block_comment);
-    "//"    yy_push_state(inline_comment);
+    [ ]*    step_tok();
+    "\n"    step_tok(); loc.lines(1);
+    "/*"    step_tok(); yy_push_state(block_comment);
+    "//"    step_tok(); yy_push_state(inline_comment);
     .       {
+                step_tok();
+                
                 unput(*yytext);
+                yy_pop_state();
+                
                 unput('{');
-                lstack.push(Layout(lstack.top().column+1, Scheme::FLOAT));
+                
+                lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
                 
                 std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
                 
-                yy_pop_state();
+                loc -= 1;
+                loc.step(); 
             }
-
+    <<EOF>> yy_pop_state();
 }
             
 <normal>{
 
-    [ ]         loc.step();
-    \n          loc.lines(1); loc.step(); yy_push_state(do_bol); 
+    [ ]         step_tok();
+    \n          step_tok(); loc.lines(1); yy_push_state(do_bol); 
     \t          driver.error(loc, "Tabs are not allowed!"); exit(0);
-    "/*"        yy_push_state(block_comment);
-    "//"        yy_push_state(inline_comment);
+    "/*"        step_tok(); yy_push_state(block_comment);
+    "//"        step_tok(); yy_push_state(inline_comment);
     
-    ".:"        return yy::hawk_parser::make_PCOLON(loc);
-    ":."        yy_push_state(layout_float); return yy::hawk_parser::make_CCOLON(loc);
-    ":="        yy_push_state(layout_align); return yy::hawk_parser::make_FUNCDEC(loc);
-    ":-"        yy_push_state(layout_float); return yy::hawk_parser::make_TYPEDEC(loc);
-    ":~"        yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
-    ":+"        yy_push_state(layout_float); return yy::hawk_parser::make_IMPLEMENT(loc);
+    ".:"        step_tok(); return yy::hawk_parser::make_PCOLON(loc);
+    ":."        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_COLONP(loc);
+    ":="        step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_FUNCDEC(loc);
+    ":-"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPEDEC(loc);
+    ":~"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
+    ":+"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_IMPLEMENT(loc);
     
-    "<-"        return yy::hawk_parser::make_LARROW(loc);
-    "<="        return yy::hawk_parser::make_LLARROW(loc);
-    "->"        return yy::hawk_parser::make_RARROW(loc);
-    "=>"        return yy::hawk_parser::make_RRARROW(loc);
-    "<:"        return yy::hawk_parser::make_SUBTYPE(loc);
+    "$"         step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
     
-    "`"         return yy::hawk_parser::make_GRAVE(loc);
-    "~"         return yy::hawk_parser::make_TILDE(loc);
-    "!"         return yy::hawk_parser::make_EXCLAIM(loc);
-    "?"         return yy::hawk_parser::make_QUESTION(loc);
-    "@"         return yy::hawk_parser::make_AT(loc);
-    "#"         return yy::hawk_parser::make_POUND(loc);
-    "$"         return yy::hawk_parser::make_DOLLAR(loc);
-    "^"         return yy::hawk_parser::make_CARET(loc);
-    "&"         return yy::hawk_parser::make_AMPERSAND(loc);
+    "<-"        step_tok(); return yy::hawk_parser::make_LARROW(loc);
+    "<="        step_tok(); return yy::hawk_parser::make_LLARROW(loc);
+    "->"        step_tok(); return yy::hawk_parser::make_RARROW(loc);
+    "=>"        step_tok(); return yy::hawk_parser::make_RRARROW(loc);
+    "<:"        step_tok(); return yy::hawk_parser::make_SUBTYPE(loc);
     
-    "{"         loc.columns(-1); return yy::hawk_parser::make_LCURLY(loc);
-    "}"         loc.columns(-1); return yy::hawk_parser::make_RCURLY(loc);
-    "("         return yy::hawk_parser::make_LPAREN(loc);
-    ")"         return yy::hawk_parser::make_RPAREN(loc);
-    "["         return yy::hawk_parser::make_LBRACKET(loc);
-    "]"         return yy::hawk_parser::make_RBRACKET(loc);
-    "|"         return yy::hawk_parser::make_BAR(loc);
+    "`"         step_tok(); return yy::hawk_parser::make_GRAVE(loc);
+    "~"         step_tok(); return yy::hawk_parser::make_TILDE(loc);
+    "!"         step_tok(); return yy::hawk_parser::make_EXCLAIM(loc);
+    "?"         step_tok(); return yy::hawk_parser::make_QUESTION(loc);
+    "@"         step_tok(); return yy::hawk_parser::make_AT(loc);
+    "#"         step_tok(); return yy::hawk_parser::make_POUND(loc);
+    "^"         step_tok(); return yy::hawk_parser::make_CARET(loc);
+    "&"         step_tok(); return yy::hawk_parser::make_AMPERSAND(loc);
     
-    ":"         return yy::hawk_parser::make_COLON(loc);
-    ";"         return yy::hawk_parser::make_SEMICOLON(loc);
-    "."         return yy::hawk_parser::make_PERIOD(loc);
-    ","         return yy::hawk_parser::make_COMMA(loc);
-    "<"         return yy::hawk_parser::make_LESSER(loc);
-    ">"         return yy::hawk_parser::make_GREATER(loc);
+    "{"         return yy::hawk_parser::make_LCURLY(loc);
+    "}"         return yy::hawk_parser::make_RCURLY(loc);
+    "("         step_tok(); return yy::hawk_parser::make_LPAREN(loc);
+    ")"         step_tok(); return yy::hawk_parser::make_RPAREN(loc);
+    "["         step_tok(); return yy::hawk_parser::make_LBRACKET(loc);
+    "]"         step_tok(); return yy::hawk_parser::make_RBRACKET(loc);
+    "|"         step_tok(); return yy::hawk_parser::make_BAR(loc);
     
-    "-"         return yy::hawk_parser::make_MINUS(loc);
-    "+"         return yy::hawk_parser::make_PLUS(loc);
-    "*"         return yy::hawk_parser::make_STAR(loc);
-    "/"         return yy::hawk_parser::make_SLASH(loc);
-    "="         return yy::hawk_parser::make_EQUALS(loc);
+    ":"         step_tok(); return yy::hawk_parser::make_COLON(loc);
+    ";"         step_tok(); return yy::hawk_parser::make_SEMICOLON(loc);
+    "."         step_tok(); return yy::hawk_parser::make_PERIOD(loc);
+    ","         step_tok(); return yy::hawk_parser::make_COMMA(loc);
+    "<"         step_tok(); return yy::hawk_parser::make_LESSER(loc);
+    ">"         step_tok(); return yy::hawk_parser::make_GREATER(loc);
     
-    {id}        return yy::hawk_parser::make_ID(yytext, loc);
-    {string}    return yy::hawk_parser::make_STRING(yytext, loc);
-    {integer}   return yy::hawk_parser::make_INTEGER(yytext, loc);
-    {decimal}   return yy::hawk_parser::make_DECIMAL(yytext, loc);
+    "-"         step_tok(); return yy::hawk_parser::make_MINUS(loc);
+    "+"         step_tok(); return yy::hawk_parser::make_PLUS(loc);
+    "*"         step_tok(); return yy::hawk_parser::make_STAR(loc);
+    "/"         step_tok(); return yy::hawk_parser::make_SLASH(loc);
+    "="         step_tok(); return yy::hawk_parser::make_EQUALS(loc);
+    
+    {id}        step_tok(); return yy::hawk_parser::make_ID(yytext, loc);
+    {string}    step_tok(); return yy::hawk_parser::make_STRING(yytext, loc);
+    {integer}   step_tok(); return yy::hawk_parser::make_INTEGER(yytext, loc);
+    {decimal}   step_tok(); return yy::hawk_parser::make_DECIMAL(yytext, loc);
 }
 
 <block_comment>{
@@ -203,11 +263,13 @@ inline_comment     "//".*
     "*"+[^*/\n]*    /* eat anything not follow by '/'s */ 
     \n              loc.lines(1); loc.step();
     "*"+"/"         yy_pop_state(); loc.step();
+    <<EOF>>         yy_pop_state();
 }
 
 <inline_comment>{
-    \n              loc.step(); yy_pop_state(); unput('\n');
-    .*              /* consume everything else */
+    \n              yy_pop_state(); unput('\n');
+    .*              step_tok();
+    <<EOF>>         yy_pop_state();
 }
 
 [.\n]           { driver.error (loc, "invalid character"); }
@@ -215,9 +277,7 @@ inline_comment     "//".*
                     if(lstack.size() == 1)
                         return yy::hawk_parser::make_END(loc);
                         
-                    unput(NULL);
-                    
-                    while(lstack.size() > 1)
+                    while(lstack.top().scheme != ROOT)
                     {
                         lstack.pop();
                         unput('}');
@@ -227,6 +287,23 @@ inline_comment     "//".*
 
 %%
 
+void step_tok()
+{
+    loc.step();
+    loc += yyleng;
+    print_curr_loc();
+}
+
+void skip_loc()
+{
+}
+
+void print_curr_loc()
+{
+    std::cout << "Current position "
+              << loc.begin.line << "." << loc.begin.column << "-"
+              << loc.end.line << "." << loc.end.column << std::endl;
+}
 
 void hawk_driver::scan_begin ()
 {
