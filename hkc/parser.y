@@ -170,7 +170,7 @@ namespace ast
 %type <ast::pModule> module
 %type <ast::pSubmodule> submod
 %type <ast::pModuleIdentifier> mod_id
-%type <ast::pModuleIdentifierVec> mod_ids mod_id_specifier
+%type <ast::pModuleIdentifierVec> mod_id_specifier mod_ids
 %type <ast::pImport> import
 %type <std::string> ident mod_id_base module_name
 %type <ast::IdentifierVec> idents type_sig attribs attribs_stmt
@@ -212,12 +212,12 @@ top_stmt : import      { ast::pExpression t = $1; $$ = t; }
 submod : mod_id_base ":." "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
        ;
        
-import : "->" mod_id { $$ = std::make_shared<ast::Import>($2); }
-       | "=>" mod_id { $$ = std::make_shared<ast::QImport>($2); }
+import : "->" "{" mod_ids "}" { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($3)); }
+       | "=>" "{" mod_ids "}" { $$ = std::make_shared<ast::QImport>(ast::mk_mod_id($3)); }
        ;
        
 mod_ids : mod_id         { $$ = ast::pModuleIdentifierVec(); $$.push_back($1); }
-        | mod_ids mod_id { $1.push_back($2); $$ = $1; }
+        | mod_ids mod_id { $$ = $1; $$.push_back($2); }
         ;
        
 mod_id : mod_id_base mod_id_specifier { $$ = std::make_shared<ast::ModuleIdentifier>($1, $2); }
@@ -227,8 +227,9 @@ mod_id_base : ident                 { $$ = $1; }
             | mod_id_base "." ident { $$ = $1 + "." + $3; }
             ;
       
-mod_id_specifier : %empty          { $$ = ast::pModuleIdentifierVec(); }
-                 | "." "(" mod_ids ")" { $$ = $3; };
+mod_id_specifier : %empty              { $$ = ast::pModuleIdentifierVec(); }
+                 | "." "(" mod_ids ")" { $$ = $3; }
+                 ;
 
 attribs : attribs_stmt         { $$ = $1; }
         | attribs attribs_stmt { $1.insert($1.end(), $2.begin(), $2.end()); $$ = $1; }

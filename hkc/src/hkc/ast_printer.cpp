@@ -57,11 +57,10 @@ void Printer::visit(Import& n)
 {
     cout << ws << "Import" << endl;
     indent();
-        cout << ws << "- id: " << n.id->id << endl;
-        cout << ws << "- subs:" << endl;
+        cout << ws << "- ids: " << endl;
         indent();
-            for(auto sub : n.id->subs)
-                cout << ws << sub << endl;
+            for(auto id : n.ids)
+                cout << ws << id << endl;
         undent();
     undent();
 }
@@ -70,11 +69,10 @@ void Printer::visit(QImport& n)
 {
     cout << ws << "QImport" << endl;
     indent();
-        cout << ws << "- id: " << n.id->id << endl;
-        cout << ws << "- subs:" << endl;
+        cout << ws << "- ids: " << endl;
         indent();
-            for(auto sub : n.id->subs)
-                cout << ws << sub << endl;
+            for(auto id : n.ids)
+                cout << ws << id << endl;
         undent();
     undent();
 }

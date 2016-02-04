@@ -76,7 +76,7 @@ inline_comment     "//".*
 %}
 
 <do_bol>{
-    [ ]*   step_tok();
+    [ \t]*  step_tok();
     "\n"    step_tok(); loc.lines(1);
     "/*"    step_tok(); yy_push_state(block_comment);
     "//"    step_tok(); yy_push_state(inline_comment);
@@ -151,7 +151,7 @@ inline_comment     "//".*
 }
 
 <layout_align>{
-    [ ]*    step_tok();
+    [ \t]*  step_tok();
     "\n"    step_tok(); loc.lines(1);
     "/*"    step_tok(); yy_push_state(block_comment);
     "//"    step_tok(); yy_push_state(inline_comment);
@@ -177,7 +177,7 @@ inline_comment     "//".*
 }
 
 <layout_float>{
-    [ ]*    step_tok();
+    [ \t]*  step_tok();
     "\n"    step_tok(); loc.lines(1);
     "/*"    step_tok(); yy_push_state(block_comment);
     "//"    step_tok(); yy_push_state(inline_comment);
@@ -201,9 +201,8 @@ inline_comment     "//".*
             
 <normal>{
 
-    [ ]         step_tok();
-    \n          step_tok(); loc.lines(1); yy_push_state(do_bol); 
-    \t          driver.error(loc, "Tabs are not allowed!"); exit(0);
+    [ \t]*      step_tok();
+    \n          step_tok(); loc.lines(1); yy_push_state(do_bol);
     "/*"        step_tok(); yy_push_state(block_comment);
     "//"        step_tok(); yy_push_state(inline_comment);
     
@@ -214,12 +213,16 @@ inline_comment     "//".*
     ":~"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
     ":+"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_IMPLEMENT(loc);
     
-    "$"         step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
+    "$"  step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
+    
+    ^[ \t]*"->" step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RARROW(loc);
+    "->"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RARROW(loc);
+    
+    ^[ \t]*"=>" step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RRARROW(loc);
+    "=>"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RRARROW(loc);
     
     "<-"        step_tok(); return yy::hawk_parser::make_LARROW(loc);
     "<="        step_tok(); return yy::hawk_parser::make_LLARROW(loc);
-    "->"        step_tok(); return yy::hawk_parser::make_RARROW(loc);
-    "=>"        step_tok(); return yy::hawk_parser::make_RRARROW(loc);
     "<:"        step_tok(); return yy::hawk_parser::make_SUBTYPE(loc);
     
     "`"         step_tok(); return yy::hawk_parser::make_GRAVE(loc);

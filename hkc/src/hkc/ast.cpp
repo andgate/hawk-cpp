@@ -2,6 +2,41 @@
 
 using namespace ast;
 
+IdentifierVec ast::mk_mod_id(pModuleIdentifierVec mods)
+{
+    IdentifierVec ids;
+    for(auto mod : mods)
+    {
+        auto id = mk_mod_id(mod);
+        ids.insert(ids.end(), id.begin(), id.end());
+    }
+    return ids;
+}
+
+IdentifierVec ast::mk_mod_id(pModuleIdentifier mod)
+{
+    IdentifierVec ids;
+    
+    if(mod->subs.empty())
+    {
+        ids.push_back(mod->id);
+        return ids;
+    }
+    
+    for(auto sub : mod->subs)
+    {
+        auto sub_ids = mk_mod_id(sub);
+        
+        ids.reserve(sub_ids.size());
+        ids.insert(ids.end(), sub_ids.begin(), sub_ids.end());
+    }
+    
+    for(auto& id : ids)
+        id = mod->id + "." + id;
+    
+    return ids;
+}
+
 pVariable ast::mk_var(pNameBindings bindings, pExpression expr)
 {
     // Sanity Check

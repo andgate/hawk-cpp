@@ -70,6 +70,9 @@ namespace ast
     typedef std::vector<pExpression> pExpressionVec;
     typedef std::vector<pVariable> pVariableVec;
     
+    IdentifierVec mk_mod_id(pModuleIdentifierVec mods);
+    IdentifierVec mk_mod_id(pModuleIdentifier mod);
+    
     pVariable mk_var(pNameBindings bindings, pExpression expr);
     pFunction mk_func(pNameBindings bindings, pExpressionGroup statements);
     
@@ -185,16 +188,16 @@ namespace ast
     
     struct Import : public Expression
     {
-        pModuleIdentifier id;
+        IdentifierVec ids;
         
         Import()
-        : id() {}
+        : ids() {}
         
-        Import(pModuleIdentifier id)
-        : id(id) {}
+        Import(IdentifierVec ids)
+        : ids(ids) {}
         
         Import(const Import& import)
-        : id(import.id) {}
+        : ids(import.ids) {}
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -204,8 +207,8 @@ namespace ast
         QImport()
         : Import() {}
         
-        QImport(pModuleIdentifier id)
-        : Import(id) {}
+        QImport(IdentifierVec ids)
+        : Import(ids) {}
         
         QImport(const Import& import)
         : Import(import) {}
