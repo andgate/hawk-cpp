@@ -215,12 +215,9 @@ inline_comment     "//".*
     
     "$"  step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
     
-    ^[ \t]*"->" step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RARROW(loc);
-    "->"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RARROW(loc);
     
-    ^[ \t]*"=>" step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RRARROW(loc);
-    "=>"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_RRARROW(loc);
-    
+    "->"        step_tok(); return yy::hawk_parser::make_RARROW(loc);
+    "=>"        step_tok(); return yy::hawk_parser::make_RRARROW(loc);
     "<-"        step_tok(); return yy::hawk_parser::make_LARROW(loc);
     "<="        step_tok(); return yy::hawk_parser::make_LLARROW(loc);
     "<:"        step_tok(); return yy::hawk_parser::make_SUBTYPE(loc);
