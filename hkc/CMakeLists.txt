@@ -11,6 +11,8 @@ set (HKC_LIB_SOURCES
   codegen.cpp
   compiler.cpp
   driver.cpp
+  SymbolTable.cpp
+  SymbolTableGen.cpp
   IdBuilder.cpp
 )
 
@@ -22,6 +24,8 @@ set (HKC_LIB_HEADERS
   compiler.h
   driver.h
   IdBuilder.h
+  SymbolTable.h
+  SymbolTableGen.h
   utils/ReadFile.h
 )
 

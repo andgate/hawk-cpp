@@ -1,4 +1,5 @@
 #include "hkc/compiler.h"
+#include "hkc/SymbolTableGen.h"
 #include "hkc/codegen.h"
 
 #include <iostream>
@@ -17,6 +18,9 @@ void hkc::Compiler::run()
     
     // 1. Parse source files, generating ast
     parse();
+    
+    // Process the ast
+    process();
     
     // 2. Various ast passes
     
@@ -43,6 +47,14 @@ void hkc::Compiler::parse()
         std::cerr << "Errors while parsing! Unable to continue" << std::endl;
         exit(0);
     }
+}
+
+void hkc::Compiler::process()
+{
+    std::cout << "Generating symbol table" << std::endl;
+    ast::SymbolTableGen* sym_gen = new ast::SymbolTableGen();
+    src_ast->accept(*sym_gen);
+    delete sym_gen;
 }
 
 void hkc::Compiler::produce_output()

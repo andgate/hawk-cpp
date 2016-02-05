@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "SymbolTable.h"
 
 namespace ast
 {
@@ -95,6 +96,8 @@ namespace ast
 
     struct Visitor
     {
+        virtual ~Visitor() {}
+        
         virtual void visit(ExpressionGroup& n) = 0;
         virtual void visit(Source& n) = 0;
         virtual void visit(Module& n) = 0;
@@ -141,10 +144,11 @@ namespace ast
     
     struct Source : public Node
     {
+        SymbolTable symbols;
         pModuleVec modules;
         
         Source()
-        : modules() { }
+        : symbols(), modules() { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -481,17 +485,20 @@ namespace ast
         
         virtual void visit(Variable& n)
         {
-            n.rhs->accept(*this);
+            if(n.rhs != nullptr)
+                n.rhs->accept(*this);
         }
         
         virtual void visit(LocalVariable& n)
         {
-            n.rhs->accept(*this);
+            if(n.rhs != nullptr)
+                n.rhs->accept(*this);
         }
         
         virtual void visit(GlobalVariable& n)
         {
-            n.rhs->accept(*this);
+            if(n.rhs != nullptr)
+                n.rhs->accept(*this);
         }
         
         virtual void visit(Function& n)

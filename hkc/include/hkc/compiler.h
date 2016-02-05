@@ -23,6 +23,7 @@ namespace hkc
         void run();
         
         void parse();
+        void process();
         
         void produce_output();
         

@@ -13,7 +13,7 @@ MyObject :-
         ^ x + y
 
 test :.
-    $ bar = 2     // Mutable
+    $ bar = 2
 
     foo: void :=
         $ obj = MyObject 17 19
