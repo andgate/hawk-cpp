@@ -1,6 +1,7 @@
 #include "hkc/driver.h"
 #include "parser.hpp"
 #include "hkc/ast_printer.h"
+#include "hkc/IdBuilder.h"
 
 #include <boost/filesystem.hpp>
 
@@ -23,6 +24,9 @@ bool hawk_driver::parse(const std::string& f)
     parser.set_debug_level(trace_parsing);
     int res = parser.parse();
     scan_end();
+    
+    ast::IdBuilder idBuilder;
+    result->accept(idBuilder);
     
     if(print_ast)
     {

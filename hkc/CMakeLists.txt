@@ -11,6 +11,7 @@ set (HKC_LIB_SOURCES
   codegen.cpp
   compiler.cpp
   driver.cpp
+  IdBuilder.cpp
 )
 
 set (HKC_LIB_HEADERS
@@ -20,6 +21,7 @@ set (HKC_LIB_HEADERS
   codegen.h
   compiler.h
   driver.h
+  IdBuilder.h
   utils/ReadFile.h
 )
 

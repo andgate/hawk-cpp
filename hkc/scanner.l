@@ -203,17 +203,19 @@ inline_comment     "//".*
 
     [ \t]*      step_tok();
     \n          step_tok(); loc.lines(1); yy_push_state(do_bol);
+    
     "/*"        step_tok(); yy_push_state(block_comment);
     "//"        step_tok(); yy_push_state(inline_comment);
     
     ".:"        step_tok(); return yy::hawk_parser::make_PCOLON(loc);
     ":."        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_COLONP(loc);
-    ":="        step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_FUNCDEC(loc);
+    
     ":-"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPEDEC(loc);
     ":~"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
     ":+"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_IMPLEMENT(loc);
     
-    "$"  step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
+    ":="        step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_FUNCDEC(loc);
+    "$"         step_tok(); yy_push_state(layout_align); return yy::hawk_parser::make_DOLLAR(loc);
     
     
     "->"        step_tok(); return yy::hawk_parser::make_RARROW(loc);
@@ -274,7 +276,7 @@ inline_comment     "//".*
 
 [.\n]           { driver.error (loc, "invalid character"); }
 <<EOF>>         {
-                    if(lstack.size() == 1)
+                    if(lstack.top().scheme == ROOT)
                         return yy::hawk_parser::make_END(loc);
                         
                     while(lstack.top().scheme != ROOT)
