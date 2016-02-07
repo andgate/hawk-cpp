@@ -76,15 +76,13 @@ static AllocaInst *CreateEntryBlockAlloca(Function *function, const std::string&
 
 /* -- Code Generation -- */
 
-void CodeGen::visit(ast::ExpressionGroup& n) {}
-
 void CodeGen::visit(ast::Source& n) {}
 
 void CodeGen::visit(ast::Module& n)
 {
-    std::cout << "Generating module " << n.id << endl;
+    std::cout << "Generating module " << ast::mk_id(n.id_path) << endl;
     Value *last = NULL;
-    for(auto expr : n.group->exprs)
+    for(auto expr : n.exprs)
     {
         std::cout << "Generating code for " << typeid(*expr).name() << endl;
         expr->accept(*this);
@@ -165,7 +163,7 @@ void CodeGen::visit(ast::FunctionCall& n)
     
     std::vector<Value*> args;
     ast::pExpressionVec::const_iterator it;
-    for (it = n.arguments->exprs.begin(); it != n.arguments->exprs.end(); it++) {
+    for (it = n.args.begin(); it != n.args.end(); it++) {
         (**it).accept(*this);
         args.push_back(vvalue);
     }

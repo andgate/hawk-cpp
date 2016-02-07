@@ -1,2 +1,0 @@
-#include "hkc/SymbolTable.h"
-

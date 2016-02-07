@@ -32,10 +32,7 @@
     std::stack<Layout> lstack;
     
     void print_curr_loc();
-    
-    
     void step_tok();
-    void skip_loc();
 %}
 
 %x do_bol
@@ -91,7 +88,7 @@ inline_comment     "//".*
                 
                 // Attempt to remove invalid layouts
                 bool checkingInvalid = true;
-                std::cout << "Checking for layouts that close left of column " << loc.begin.column << std::endl;
+                //std::cout << "Checking for layouts that close left of column " << loc.begin.column << std::endl;
                 while(checkingInvalid)
                 {
                     Layout l = lstack.top();
@@ -106,7 +103,7 @@ inline_comment     "//".*
                         if(l.column >=  loc.begin.column)
                         {
                             // Close floating layout
-                            std::cout << "Closing floating layout on column " << l.column << std::endl;
+                            //std::cout << "Closing floating layout on column " << l.column << std::endl;
                             lstack.pop();
                             out_buf += '}';
                         } else { checkingInvalid = false; }
@@ -116,7 +113,7 @@ inline_comment     "//".*
                         if(l.column > loc.begin.column)
                         {
                             // Close aligned layout
-                            std::cout << "Closing aligned layout on column " << l.column << std::endl;
+                            //std::cout << "Closing aligned layout on column " << l.column << std::endl;
                             lstack.pop();
                             out_buf += '}';
                         } else { checkingInvalid = false; }
@@ -129,7 +126,7 @@ inline_comment     "//".*
                 {
                     // Manually add a new layout to the stack
                     lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
-                    std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                    //std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
                     // Add the start of the new layout to the buffer
                     out_buf += '{';
                 }
@@ -137,7 +134,7 @@ inline_comment     "//".*
                 // Add the yytext to the buffer.
                 out_buf += yytext_old;
                 
-                std::cout << "Out buffer contains \"" << out_buf << "\"" << std::endl;
+                //std::cout << "Out buffer contains \"" << out_buf << "\"" << std::endl;
                 
                 for(auto it = out_buf.rbegin(); it != out_buf.rend(); ++it)
                     unput(*it);
@@ -165,9 +162,9 @@ inline_comment     "//".*
                 unput('{');
                 
                 lstack.push(Layout(loc.begin.column, Scheme::ALIGN));
-                std::cout << "Creating aligned layout on column " << lstack.top().column << std::endl;
+                //std::cout << "Creating aligned layout on column " << lstack.top().column << std::endl;
                 lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
-                std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                //std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
                 
                 loc -= 1;
                 loc.step(); 
@@ -191,7 +188,7 @@ inline_comment     "//".*
                 
                 lstack.push(Layout(lstack.top().column, Scheme::FLOAT));
                 
-                std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
+                //std::cout << "Creating floating layout on column " << lstack.top().column << std::endl;
                 
                 loc -= 1;
                 loc.step(); 
@@ -293,11 +290,7 @@ void step_tok()
 {
     loc.step();
     loc += yyleng;
-    print_curr_loc();
-}
-
-void skip_loc()
-{
+    //print_curr_loc();
 }
 
 void print_curr_loc()

@@ -1,24 +1,22 @@
-#ifndef _ID_BUILDER_H_
-#define _ID_BUILDER_H_
+#ifndef _GLOBAL_DICTIONARY_GEN_
+#define _GLOBAL_DICTIONARY_GEN_
 
 #include "hkc/ast.h"
-#include <vector>
+
+#include <string>
+#include <unordered_map>
 
 namespace ast
 {
-
-    class IdBuilder : public Visitor
+    void gen_gdict(pSource src);
+    
+    struct GDictGen : public Visitor
     {
-        std::vector<std::string> namespace_stack;
-        
-        void push_namespace(std::string id);
-        void pop_namespace();
-        void prepend_namespace(std::string& id);
-        
-    public:
-        IdBuilder(): namespace_stack() {}
-        
-        void visit(ExpressionGroup& n) override;
+        pDictionary<Node*> dict;
+        IdentifierVec id_path;
+
+        GDictGen()
+        : dict(), id_path() {}
         
         void visit(Source& n) override;
         void visit(Module& n) override;
@@ -48,7 +46,6 @@ namespace ast
         void visit(GlobalFunction& n) override;
         void visit(LocalFunction& n) override;
     };
-
 }
 
-#endif // _ID_BUILDER_H_
+#endif // _GLOBAL_DICTIONARY_GEN_

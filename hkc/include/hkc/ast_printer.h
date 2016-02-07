@@ -11,8 +11,6 @@ namespace ast
     public:
         Printer(): ws(), curr_indent(0) {}
         
-        void visit(ExpressionGroup& n) override;
-        
         void visit(Source& n) override;
         void visit(Module& n) override;
         void visit(Submodule& n) override;

@@ -1,0 +1,8 @@
+.: Test.Objects
+
+MyObject :-
+    $ x: i32
+      y: i32
+    
+    add : i64 :=
+        ^ x + y

@@ -1,7 +1,6 @@
 #include "hkc/driver.h"
 #include "parser.hpp"
 #include "hkc/ast_printer.h"
-#include "hkc/IdBuilder.h"
 
 #include <boost/filesystem.hpp>
 
@@ -16,17 +15,15 @@ bool hawk_driver::parse(const std::string& f)
     filename = f;
     
     fs::path p(f);
-    std::string mod_name = p.filename().string();
-    result = std::make_shared<ast::Module>(mod_name, std::make_shared<ast::ExpressionGroup>());
+    ast::IdentifierVec mod_name;
+    mod_name.push_back(p.filename().string());
+    result = std::make_shared<ast::Module>(mod_name, ast::pExpressionVec());
     
     scan_begin();
     yy::hawk_parser parser(*this);
     parser.set_debug_level(trace_parsing);
     int res = parser.parse();
     scan_end();
-    
-    ast::IdBuilder idBuilder;
-    result->accept(idBuilder);
     
     if(print_ast)
     {

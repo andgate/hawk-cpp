@@ -7,11 +7,11 @@
 #include <string>
 #include <vector>
 
-#include "SymbolTable.h"
+#include "hkc/dictionary.h"
 
 namespace ast
 {
-    class ExpressionGroup;
+    class Node;
     class Source;
     class Module;
     class Submodule;
@@ -40,6 +40,7 @@ namespace ast
     
     typedef std::string Identifier;
     
+    typedef std::shared_ptr<Node> pNode;
     typedef std::shared_ptr<Source> pSource;
     typedef std::shared_ptr<Module> pModule;
     typedef std::shared_ptr<Submodule> pSubmodule;
@@ -47,7 +48,6 @@ namespace ast
     typedef std::shared_ptr<Import> pImport;
     typedef std::shared_ptr<QImport> pQImport;
     typedef std::shared_ptr<Expression> pExpression;
-    typedef std::shared_ptr<ExpressionGroup> pExpressionGroup;
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
     
@@ -66,16 +66,19 @@ namespace ast
     typedef std::vector<pModule> pModuleVec;
     typedef std::vector<pModuleIdentifier> pModuleIdentifierVec;
     typedef std::vector<Identifier> IdentifierVec;
+    typedef std::vector<IdentifierVec> IdPathVec;
     typedef std::vector<pTaggedUnion> pTaggedUnionVec;
     typedef std::vector<pTaggedVariant> pTaggedVariantVec;
     typedef std::vector<pExpression> pExpressionVec;
     typedef std::vector<pVariable> pVariableVec;
     
-    IdentifierVec mk_mod_id(pModuleIdentifierVec mods);
-    IdentifierVec mk_mod_id(pModuleIdentifier mod);
+    std::string mk_id(IdentifierVec& id_path);
+    
+    IdPathVec mk_mod_id(pModuleIdentifierVec mods);
+    IdPathVec mk_mod_id(pModuleIdentifier mod);
     
     pVariable mk_var(pNameBindings bindings, pExpression expr);
-    pFunction mk_func(pNameBindings bindings, pExpressionGroup statements);
+    pFunction mk_func(pNameBindings bindings, pExpressionVec statements);
     
     pFunction promote_global(pFunction f);
     pVariable promote_global(pVariable v);
@@ -98,7 +101,6 @@ namespace ast
     {
         virtual ~Visitor() {}
         
-        virtual void visit(ExpressionGroup& n) = 0;
         virtual void visit(Source& n) = 0;
         virtual void visit(Module& n) = 0;
         virtual void visit(Submodule& n) = 0;
@@ -131,77 +133,67 @@ namespace ast
         virtual void accept(Visitor &v) {}
     };
     
-    struct ExpressionGroup : public Expression
-    {
-        pExpressionVec exprs;
-        
-        ExpressionGroup() : exprs() {}
-        ExpressionGroup(pExpressionVec exprs) : exprs(exprs) {}
-        ExpressionGroup(pExpressionGroup group) : exprs(group->exprs) {}
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
     struct Source : public Node
     {
-        SymbolTable symbols;
+        pDictionary<Node*> dict;
+        
         pModuleVec modules;
         
         Source()
-        : symbols(), modules() { }
+        : dict(), modules() { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
 
     struct Module : public Node
     {
-        Identifier id;
-        pExpressionGroup group;
+        IdentifierVec id_path;
+        pExpressionVec exprs;
         
-        Module(Identifier id)
-        : id(id), group() { }
-        Module(Identifier id, pExpressionGroup group)
-        : id(id), group(group) { }
+        Module(IdentifierVec id_path)
+        : id_path(id_path), exprs() { }
+        Module(IdentifierVec id_path, pExpressionVec exprs)
+        : id_path(id_path), exprs(exprs) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
     struct Submodule : public Expression
-    {
-        Identifier id;
-        pExpressionGroup group;
+    {   
+        IdentifierVec id_path;
+        pExpressionVec exprs;
         
-        Submodule(Identifier id, pExpressionGroup group)
-        : id(id), group(group) { }
+        Submodule(IdentifierVec id_path, pExpressionVec exprs)
+        : id_path(id_path), exprs(exprs) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
     
     struct ModuleIdentifier
     {
-        Identifier id;
+        IdentifierVec id_path;
         pModuleIdentifierVec subs;
         
         ModuleIdentifier()
-        : id(), subs() {}
-        ModuleIdentifier(Identifier id)
-        : id(id), subs() {}
-        ModuleIdentifier(Identifier id, pModuleIdentifierVec subs)
-        : id(id), subs(subs) {}
+        : id_path(), subs() {}
+        ModuleIdentifier(IdentifierVec id_path)
+        : id_path(id_path), subs() {}
+        ModuleIdentifier(IdentifierVec id_path, pModuleIdentifierVec subs)
+        : id_path(id_path), subs(subs) {}
     };
     
     struct Import : public Expression
     {
-        IdentifierVec ids;
+        std::vector<IdentifierVec> id_paths;
         
         Import()
-        : ids() {}
+        : id_paths() {}
         
-        Import(IdentifierVec ids)
-        : ids(ids) {}
+        Import(std::vector<IdentifierVec> id_paths)
+        : id_paths(id_paths) {}
         
         Import(const Import& import)
-        : ids(import.ids) {}
+        : id_paths(import.id_paths) {}
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -211,8 +203,8 @@ namespace ast
         QImport()
         : Import() {}
         
-        QImport(IdentifierVec ids)
-        : Import(ids) {}
+        QImport(std::vector<IdentifierVec> id_paths)
+        : Import(id_paths) {}
         
         QImport(const Import& import)
         : Import(import) {}
@@ -256,11 +248,11 @@ namespace ast
     struct FunctionCall : public Expression
     {
         pIdentifierRef id_ref;
-        pExpressionGroup arguments;
+        pExpressionVec args;
         
-        FunctionCall(pIdentifierRef id_ref) : id_ref(id_ref), arguments() { }
-        FunctionCall(pIdentifierRef id_ref, pExpressionGroup arguments)
-        : id_ref(id_ref), arguments(arguments) { }
+        FunctionCall(pIdentifierRef id_ref) : id_ref(id_ref), args() { }
+        FunctionCall(pIdentifierRef id_ref, pExpressionVec arguments)
+        : id_ref(id_ref), args(arguments) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -310,10 +302,10 @@ namespace ast
     struct Record : public Expression
     {
         Identifier id;
-        pExpressionGroup group;
+        pExpressionVec exprs;
         
-        Record(Identifier id, pExpressionGroup group)
-        : id(id), group(group) { }
+        Record(Identifier id, pExpressionVec exprs)
+        : id(id), exprs(exprs) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -378,18 +370,18 @@ namespace ast
         Identifier id;
         Identifier type;
         pVariableVec params;
-        pExpressionGroup statements;
+        pExpressionVec stmts;
         
         
         Function(Identifier id, Identifier type,
                             pVariableVec params,
-                 pExpressionGroup statements)
+                 pExpressionVec statements)
         : attribs(), id(id), type(type)
-        , params(params), statements(statements) {}
+        , params(params), stmts(statements) {}
         
         Function(const Function& f)
         : attribs(f.attribs), id(f.id), type(f.type)
-        , params(f.params), statements(f.statements) {}
+        , params(f.params), stmts(f.stmts) {}
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -410,14 +402,6 @@ namespace ast
     
     struct VisitorAdapter : public Visitor
     {
-        virtual void visit(ExpressionGroup& n)
-        {
-            for(auto expr : n.exprs)
-            {
-                expr->accept(*this);
-            }
-        }
-        
         virtual void visit(Source& n)
         {
             for(auto module : n.modules)
@@ -428,12 +412,14 @@ namespace ast
         
         virtual void visit(Module& n)
         {
-            n.group->accept(*this);
+            for(auto expr : n.exprs)
+                expr->accept(*this);
         }
         
         virtual void visit(Submodule& n)
         {
-            n.group->accept(*this);
+            for(auto expr : n.exprs)
+                expr->accept(*this);
         }
         
         virtual void visit(Import& n) {}
@@ -447,7 +433,8 @@ namespace ast
         virtual void visit(FunctionCall& n)
         {
             n.id_ref->accept(*this);
-            n.arguments->accept(*this);
+            for(auto arg : n.args)
+                arg->accept(*this);
         }
         
         virtual void visit(BinaryOperator& n)
@@ -470,7 +457,8 @@ namespace ast
         
         virtual void visit(Record& n)
         {
-            n.group->accept(*this);
+            for(auto expr : n.exprs)
+                expr->accept(*this);
         }
         
         virtual void visit(TaggedUnion& n)
@@ -508,7 +496,8 @@ namespace ast
                 param->accept(*this);
             }
             
-            n.statements->accept(*this);
+            for(auto stmt : n.stmts)
+                stmt->accept(*this);
         }
         
         virtual void visit(GlobalFunction& n)
@@ -518,7 +507,8 @@ namespace ast
                 param->accept(*this);
             }
             
-            n.statements->accept(*this);
+            for(auto stmt : n.stmts)
+                stmt->accept(*this);
         }
         
         virtual void visit(LocalFunction& n)
@@ -528,7 +518,8 @@ namespace ast
                 param->accept(*this);
             }
             
-            n.statements->accept(*this);
+            for(auto stmt : n.stmts)
+                stmt->accept(*this);
         }
     };
 }

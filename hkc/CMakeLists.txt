@@ -10,10 +10,9 @@ set (HKC_LIB_SOURCES
   ast_printer.cpp
   codegen.cpp
   compiler.cpp
+  dictionary.cpp
   driver.cpp
-  SymbolTable.cpp
-  SymbolTableGen.cpp
-  IdBuilder.cpp
+  gdict_gen.cpp
 )
 
 set (HKC_LIB_HEADERS
@@ -22,10 +21,9 @@ set (HKC_LIB_HEADERS
   build.h
   codegen.h
   compiler.h
+  dictionary.h
   driver.h
-  IdBuilder.h
-  SymbolTable.h
-  SymbolTableGen.h
+  gdict_gen.h
   utils/ReadFile.h
 )
 

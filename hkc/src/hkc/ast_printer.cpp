@@ -10,17 +10,6 @@ using namespace std;
 using namespace ast;
 
 
-void Printer::visit(ExpressionGroup& n)
-{
-    cout << ws << "ExpressionGroup" << endl;
-    indent();
-        cout << ws << "- exprs:" << endl;
-        indent();
-            for(auto expr : n.exprs) expr->accept(*this);
-        undent();
-    undent();
-}
-
 void Printer::visit(Source& n)
 {        
     for(auto module : n.modules)
@@ -33,10 +22,10 @@ void Printer::visit(Module& n)
 {        
     cout << "Module" << endl;
     indent();
-        cout << ws << "- id: " << n.id << endl;
-        cout << ws << "- groups:" << endl;
+        cout << ws << "- id_path: " << mk_id(n.id_path) << endl;
+        cout << ws << "- exprs:" << endl;
         indent();
-            n.group->accept(*this);
+            for(auto expr : n.exprs) expr->accept(*this);
         undent();
     undent();
 }
@@ -45,10 +34,10 @@ void Printer::visit(Submodule& n)
 {
     cout << ws << "Submodule" << endl;
     indent();
-        cout << ws << "- id: " << n.id << endl;
-        cout << ws << "- groups:" << endl;
+        cout << ws << "- id: " << mk_id(n.id_path) << endl;
+        cout << ws << "- exprs:" << endl;
         indent();
-            n.group->accept(*this);
+            for(auto expr : n.exprs) expr->accept(*this);
         undent();
     undent();
 }
@@ -57,10 +46,9 @@ void Printer::visit(Import& n)
 {
     cout << ws << "Import" << endl;
     indent();
-        cout << ws << "- ids: " << endl;
+        cout << ws << "- id_paths: " << endl;
         indent();
-            for(auto id : n.ids)
-                cout << ws << id << endl;
+            for(auto id_path : n.id_paths) cout << ws << mk_id(id_path) << endl;
         undent();
     undent();
 }
@@ -69,10 +57,9 @@ void Printer::visit(QImport& n)
 {
     cout << ws << "QImport" << endl;
     indent();
-        cout << ws << "- ids: " << endl;
+        cout << ws << "- id_paths: " << endl;
         indent();
-            for(auto id : n.ids)
-                cout << ws << id << endl;
+            for(auto id_path : n.id_paths) cout << ws << mk_id(id_path) << endl;
         undent();
     undent();
 }
@@ -117,9 +104,9 @@ void Printer::visit(FunctionCall& n)
         indent();
             n.id_ref->accept(*this);
         undent();
-        cout << ws << "- arguments:" << endl;
+        cout << ws << "- args:" << endl;
         indent();
-            n.arguments->accept(*this);
+            for(auto arg : n.args) arg->accept(*this);
         undent();
     undent();
 }
@@ -171,9 +158,9 @@ void Printer::visit(Record& n)
     cout << ws << "Record" << endl;
     indent();
         cout << ws << "- id: " << n.id << endl;
-        cout << ws << "- group:" << endl;
+        cout << ws << "- exprs:" << endl;
         indent();
-            for(auto expr : n.group->exprs) expr->accept(*this);
+            for(auto expr : n.exprs) expr->accept(*this);
         undent();
     undent();
 }
@@ -287,9 +274,9 @@ void Printer::visit(Function& n)
             undent();
         }
         
-        cout << ws << "- statements:" << endl;
+        cout << ws << "- stmts:" << endl;
         indent();
-        n.statements->accept(*this);
+            for(auto stmt : n.stmts) stmt->accept(*this);
         undent();
     
     undent();
@@ -315,9 +302,9 @@ void Printer::visit(GlobalFunction& n)
             undent();
         }
         
-        cout << ws << "- statements:" << endl;
+        cout << ws << "- stmts:" << endl;
         indent();
-            n.statements->accept(*this);
+            for(auto stmt : n.stmts) stmt->accept(*this);
         undent();
     
     undent();
@@ -343,9 +330,9 @@ void Printer::visit(LocalFunction& n)
         undent();
     }
     
-    cout << ws << "- statements:" << endl;
+    cout << ws << "- stmts:" << endl;
     indent();
-    n.statements->accept(*this);
+        for(auto stmt : n.stmts) stmt->accept(*this);
     undent();
     
     undent();

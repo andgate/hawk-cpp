@@ -1,18 +1,10 @@
 .: Test.Main
 
--> Math.add
-=> Math.(add sub div mul)
+-> Test.Objects
 
 Bool :- True | False
-    
-MyObject :-
-    $ x: i32
-      y: i32
-    
-    add : i64 :=
-        ^ x + y
 
-test :.
+stuff :.
     $ bar = 2
 
     foo: void :=

@@ -2,39 +2,40 @@
 
 using namespace ast;
 
-IdentifierVec ast::mk_mod_id(pModuleIdentifierVec mods)
+std::string ast::mk_id(IdentifierVec& id_path)
 {
-    IdentifierVec ids;
-    for(auto mod : mods)
-    {
-        auto id = mk_mod_id(mod);
-        ids.insert(ids.end(), id.begin(), id.end());
-    }
-    return ids;
+    std::string id;
+    if(id_path.empty()) return id;
+    
+    id += id_path[0];
+    for(size_t i = 1; i < id_path.size(); ++i)
+        id += '.' + id_path[i];
+    return id;
 }
 
-IdentifierVec ast::mk_mod_id(pModuleIdentifier mod)
+IdPathVec ast::mk_mod_id(pModuleIdentifier mod)
 {
-    IdentifierVec ids;
+    IdPathVec id_paths;
     
     if(mod->subs.empty())
     {
-        ids.push_back(mod->id);
-        return ids;
-    }
-    
-    for(auto sub : mod->subs)
+        id_paths.push_back(mod->id_path);
+    } else
     {
-        auto sub_ids = mk_mod_id(sub);
-        
-        ids.reserve(sub_ids.size());
-        ids.insert(ids.end(), sub_ids.begin(), sub_ids.end());
+        for(auto sub : mod->subs)
+        {
+            auto sub_paths(mk_mod_id(sub));
+            for(auto sub_path : sub_paths)
+            {
+                IdentifierVec curr_path;
+                curr_path.insert(curr_path.end(), mod->id_path.begin(), mod->id_path.end());
+                curr_path.insert(curr_path.end(), sub_path.begin(), sub_path.end());
+                id_paths.push_back(curr_path);
+            }
+        }
     }
     
-    for(auto& id : ids)
-        id = mod->id + "." + id;
-    
-    return ids;
+    return id_paths;
 }
 
 pVariable ast::mk_var(pNameBindings bindings, pExpression expr)
@@ -59,7 +60,7 @@ pVariable ast::mk_var(pNameBindings bindings, pExpression expr)
     return std::make_shared<Variable>(var_id, type_id, expr);
 }
 
-pFunction ast::mk_func(pNameBindings bindings, pExpressionGroup statements)
+pFunction ast::mk_func(pNameBindings bindings, pExpressionVec stmts)
 {
     Identifier func_id = bindings->ids.front();
     uint param_id_count;
@@ -97,7 +98,7 @@ pFunction ast::mk_func(pNameBindings bindings, pExpressionGroup statements)
         params.push_back(std::make_shared<Variable>(param_name, param_type));
     }
     
-    return std::make_shared<Function>(func_id, func_type, params, statements);
+    return std::make_shared<Function>(func_id, func_type, params, stmts);
 }
 
 

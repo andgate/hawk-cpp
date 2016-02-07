@@ -53,7 +53,6 @@ public:
     void print_ir();
     void write_ir(const std::string& out_file);
     
-    void visit(ast::ExpressionGroup& n) override;
     void visit(ast::Source& n) override;
     void visit(ast::Module& n) override;
     void visit(ast::Submodule& n) override;

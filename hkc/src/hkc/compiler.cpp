@@ -1,6 +1,7 @@
 #include "hkc/compiler.h"
-#include "hkc/SymbolTableGen.h"
+#include "hkc/gdict_gen.h"
 #include "hkc/codegen.h"
+#include "hkc/dictionary.h"
 
 #include <iostream>
 #include <vector>
@@ -31,8 +32,8 @@ void hkc::Compiler::run()
 void hkc::Compiler::parse()
 {
     hawk_driver driver;
-    driver.trace_parsing = true;
-    driver.trace_scanning = true;
+    driver.trace_parsing = false;
+    driver.trace_scanning = false;
     driver.print_ast = true;
     
     bool has_error(false);
@@ -52,9 +53,8 @@ void hkc::Compiler::parse()
 void hkc::Compiler::process()
 {
     std::cout << "Generating symbol table" << std::endl;
-    ast::SymbolTableGen* sym_gen = new ast::SymbolTableGen();
-    src_ast->accept(*sym_gen);
-    delete sym_gen;
+    ast::gen_gdict(src_ast);
+    src_ast->dict->print();
 }
 
 void hkc::Compiler::produce_output()
@@ -68,7 +68,7 @@ void hkc::Compiler::produce_output()
     
     for(auto module : src_ast->modules)
     {
-        auto out_path = ir_dir / module->id;
+        auto out_path = ir_dir / ast::mk_id(module->id_path);
         out_path.replace_extension("ll");
         const std::string out_file(out_path.string());
         
