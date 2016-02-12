@@ -26,7 +26,6 @@ public:
     std::string filename;
     bool trace_scanning;
     bool trace_parsing;
-    bool print_ast;
     
     hawk_driver();
     

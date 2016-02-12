@@ -76,7 +76,7 @@ static AllocaInst *CreateEntryBlockAlloca(Function *function, const std::string&
 
 /* -- Code Generation -- */
 
-void CodeGen::visit(ast::Source& n) {}
+void CodeGen::visit(ast::RootModule& n) {}
 
 void CodeGen::visit(ast::Module& n)
 {
@@ -95,7 +95,6 @@ void CodeGen::visit(ast::Module& n)
 void CodeGen::visit(ast::Submodule& n) {}
 
 void CodeGen::visit(ast::Import& n) {}
-void CodeGen::visit(ast::QImport& n) {}
 
 /*void CodeGen::visit(ast::Block& n)
 {

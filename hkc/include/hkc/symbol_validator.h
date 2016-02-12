@@ -1,30 +1,30 @@
-#ifndef _GLOBAL_DICTIONARY_GEN_
-#define _GLOBAL_DICTIONARY_GEN_
+#ifndef _SYMBOL_VALIDATOR_H_
+#define _SYMBOL_VALIDATOR_H_
 
 #include "hkc/ast.h"
+#include "hkc/prefix_trie.h"
+#include "hkc/symtab.h"
 
 #include <string>
 #include <unordered_map>
 
 namespace ast
 {
-    void gen_gdict(pSource src);
+    pPrefixTrie validate_symbols(pRootModule root);
     
-    struct GDictGen : public Visitor
+    struct SymbolValidator : public Visitor
     {
-        pDictionary<Node*> dict;
+        SymbolTable symtab;
         IdentifierVec id_path;
-
-        GDictGen()
-        : dict(), id_path() {}
         
-        void visit(Source& n) override;
+        SymbolValidator()
+        : symtab(), id_path() {}
+        
+        void visit(RootModule& n) override;
         void visit(Module& n) override;
         void visit(Submodule& n) override;
         
         void visit(Import& n) override;
-        void visit(QImport& n) override;
-        
         void visit(IdentifierRef& n) override;
         void visit(Integer& n) override;
         void visit(Decimal& n) override;
@@ -48,4 +48,4 @@ namespace ast
     };
 }
 
-#endif // _GLOBAL_DICTIONARY_GEN_
+#endif // _SYMBOL_VALIDATOR_H_

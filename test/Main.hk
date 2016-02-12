@@ -1,6 +1,6 @@
 .: Test.Main
 
--> Test.Objects
+=> Test.Objects
 
 Bool :- True | False
 

@@ -1,7 +1,7 @@
 #include "hkc/compiler.h"
-#include "hkc/gdict_gen.h"
 #include "hkc/codegen.h"
-#include "hkc/dictionary.h"
+#include "hkc/ast_printer.h"
+#include "hkc/global_symbol_collector.h"
 
 #include <iostream>
 #include <vector>
@@ -9,7 +9,6 @@
 
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
-
 
 void hkc::Compiler::run()
 {
@@ -34,13 +33,12 @@ void hkc::Compiler::parse()
     hawk_driver driver;
     driver.trace_parsing = false;
     driver.trace_scanning = false;
-    driver.print_ast = true;
     
     bool has_error(false);
     for(auto in_file : build->in_files)
     {
         has_error = has_error & !driver.parse(in_file);
-        src_ast->modules.push_back(driver.result);
+        root->modules.push_back(driver.result);
         driver.reset();
     }
     
@@ -53,8 +51,11 @@ void hkc::Compiler::parse()
 void hkc::Compiler::process()
 {
     std::cout << "Generating symbol table" << std::endl;
-    ast::gen_gdict(src_ast);
-    src_ast->dict->print();
+    //ast::gen_gdict(root);
+    //ast::gen_imports(root);
+    ast::print(root);
+    global_symbols = ast::collect_global_symbols(root);
+    global_symbols->print();
 }
 
 void hkc::Compiler::produce_output()
@@ -66,7 +67,7 @@ void hkc::Compiler::produce_output()
     ir_dir /= "intermediates/ir";
     fs::create_directories(ir_dir);
     
-    for(auto module : src_ast->modules)
+    for(auto module : root->modules)
     {
         auto out_path = ir_dir / ast::mk_id(module->id_path);
         out_path.replace_extension("ll");

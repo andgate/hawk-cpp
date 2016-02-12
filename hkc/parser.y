@@ -214,8 +214,10 @@ top_stmt : import      { ast::pExpression t = $1; $$ = t; }
 submod : mod_id_base ":." "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
        ;
        
-import : "->" mod_id { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2)); }
-       | "=>" mod_id { $$ = std::make_shared<ast::QImport>(ast::mk_mod_id($2)); }
+import : "->" mod_id { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), "", false); }
+       | "->" mod_id "=" ident { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), $4, false); }
+       | "=>" mod_id { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), "", true); }
+       | "=>" mod_id "=" ident { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), $4, true); }
        ;
        
 mod_ids : mod_id         { $$ = ast::pModuleIdentifierVec(); $$.push_back($1); }

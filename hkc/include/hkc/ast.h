@@ -7,17 +7,14 @@
 #include <string>
 #include <vector>
 
-#include "hkc/dictionary.h"
-
 namespace ast
 {
     class Node;
-    class Source;
+    class RootModule;
     class Module;
     class Submodule;
     class ModuleIdentifier;
     class Import;
-    class QImport;
     class Expression;
     class IdentifierRef;
     class Integer;
@@ -41,12 +38,11 @@ namespace ast
     typedef std::string Identifier;
     
     typedef std::shared_ptr<Node> pNode;
-    typedef std::shared_ptr<Source> pSource;
+    typedef std::shared_ptr<RootModule> pRootModule;
     typedef std::shared_ptr<Module> pModule;
     typedef std::shared_ptr<Submodule> pSubmodule;
     typedef std::shared_ptr<ModuleIdentifier> pModuleIdentifier;
     typedef std::shared_ptr<Import> pImport;
-    typedef std::shared_ptr<QImport> pQImport;
     typedef std::shared_ptr<Expression> pExpression;
     typedef std::shared_ptr<IdentifierRef> pIdentifierRef;
     typedef std::shared_ptr<NameBindings> pNameBindings;
@@ -86,7 +82,7 @@ namespace ast
     pFunction promote_local(pFunction f);
     pVariable promote_local(pVariable v);
     
-    pImport promote_qualified(pImport i);
+    pImport promote_public(pImport i);
 
     class Visitor;
 
@@ -101,11 +97,10 @@ namespace ast
     {
         virtual ~Visitor() {}
         
-        virtual void visit(Source& n) = 0;
+        virtual void visit(RootModule& n) = 0;
         virtual void visit(Module& n) = 0;
         virtual void visit(Submodule& n) = 0;
         virtual void visit(Import& n) = 0;
-        virtual void visit(QImport& n) = 0;
         virtual void visit(IdentifierRef& n) = 0;
         virtual void visit(Integer& n) = 0;
         virtual void visit(Decimal& n) = 0;
@@ -133,14 +128,12 @@ namespace ast
         virtual void accept(Visitor &v) {}
     };
     
-    struct Source : public Node
+    struct RootModule : public Node
     {
-        pDictionary<Node*> dict;
-        
         pModuleVec modules;
         
-        Source()
-        : dict(), modules() { }
+        RootModule()
+        : modules() { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -185,29 +178,20 @@ namespace ast
     struct Import : public Expression
     {
         std::vector<IdentifierVec> id_paths;
+        std::string alias_id;
+        bool is_public;
         
         Import()
-        : id_paths() {}
+        : id_paths(), alias_id(), is_public(false) {}
         
         Import(std::vector<IdentifierVec> id_paths)
-        : id_paths(id_paths) {}
+        : id_paths(id_paths), alias_id(), is_public(false) {}
+        
+        Import(std::vector<IdentifierVec> id_paths, std::string alias_id, bool is_public)
+        : id_paths(id_paths), alias_id(alias_id), is_public(is_public) {}
         
         Import(const Import& import)
-        : id_paths(import.id_paths) {}
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
-    struct QImport : public Import
-    {
-        QImport()
-        : Import() {}
-        
-        QImport(std::vector<IdentifierVec> id_paths)
-        : Import(id_paths) {}
-        
-        QImport(const Import& import)
-        : Import(import) {}
+        : id_paths(import.id_paths), alias_id(import.alias_id), is_public(import.is_public) {}
         
         virtual void accept(Visitor &v) { v.visit(*this); }
     };
@@ -402,7 +386,7 @@ namespace ast
     
     struct VisitorAdapter : public Visitor
     {
-        virtual void visit(Source& n)
+        virtual void visit(RootModule& n)
         {
             for(auto module : n.modules)
             {
@@ -423,7 +407,6 @@ namespace ast
         }
         
         virtual void visit(Import& n) {}
-        virtual void visit(QImport& n) {}
         
         virtual void visit(IdentifierRef& n) {}
         virtual void visit(Integer& n) {}

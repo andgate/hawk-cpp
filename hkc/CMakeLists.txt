@@ -10,9 +10,12 @@ set (HKC_LIB_SOURCES
   ast_printer.cpp
   codegen.cpp
   compiler.cpp
-  dictionary.cpp
   driver.cpp
-  gdict_gen.cpp
+  global_symbol_collector.cpp
+  prefix_trie.cpp
+  suffix_trie.cpp
+  symbol_validator.cpp
+  symtab.cpp
 )
 
 set (HKC_LIB_HEADERS
@@ -21,9 +24,12 @@ set (HKC_LIB_HEADERS
   build.h
   codegen.h
   compiler.h
-  dictionary.h
   driver.h
-  gdict_gen.h
+  global_symbol_collector.h
+  prefix_trie.h
+  suffix_trie.h
+  symbol_validator.h
+  symtab.h
   utils/ReadFile.h
 )
 

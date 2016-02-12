@@ -1,8 +1,4 @@
-#ifndef _CST_PRINTER_H_
-#define _CST_PRINTER_H_
-
 #include "hkc/ast_printer.h"
-
 #include <iostream>
 #include <string>
 
@@ -10,7 +6,13 @@ using namespace std;
 using namespace ast;
 
 
-void Printer::visit(Source& n)
+void ast::print(pRootModule& root)
+{
+    Printer printer;
+    root->accept(printer);
+}
+
+void Printer::visit(RootModule& n)
 {        
     for(auto module : n.modules)
     {
@@ -45,17 +47,6 @@ void Printer::visit(Submodule& n)
 void Printer::visit(Import& n)
 {
     cout << ws << "Import" << endl;
-    indent();
-        cout << ws << "- id_paths: " << endl;
-        indent();
-            for(auto id_path : n.id_paths) cout << ws << mk_id(id_path) << endl;
-        undent();
-    undent();
-}
-
-void Printer::visit(QImport& n)
-{
-    cout << ws << "QImport" << endl;
     indent();
         cout << ws << "- id_paths: " << endl;
         indent();
@@ -349,5 +340,3 @@ void Printer::undent()
     curr_indent -= 2;
     ws = std::string(curr_indent, ' ');
 }
-
-#endif // _CST_PRINTER_H_

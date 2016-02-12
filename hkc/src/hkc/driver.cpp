@@ -7,7 +7,7 @@
 namespace fs = boost::filesystem;
 
 hawk_driver::hawk_driver()
-: filename(), trace_scanning (false), trace_parsing (false), print_ast(false)
+: filename(), trace_scanning (false), trace_parsing (false)
 {}
 
 bool hawk_driver::parse(const std::string& f)
@@ -24,12 +24,6 @@ bool hawk_driver::parse(const std::string& f)
     parser.set_debug_level(trace_parsing);
     int res = parser.parse();
     scan_end();
-    
-    if(print_ast)
-    {
-        ast::Printer printer;
-        result->accept(printer);
-    }
     
     return !res;
 }

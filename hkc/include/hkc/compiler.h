@@ -4,6 +4,7 @@
 #include "hkc/build.h"
 #include "hkc/driver.h"
 #include "hkc/ast.h"
+#include "hkc/prefix_trie.h"
 
 #include <string>
 #include <memory>
@@ -14,11 +15,12 @@ namespace hkc
     {
     private:
         Build_ptr build;
-        ast::pSource src_ast;
+        ast::pRootModule root;
+        pPrefixTrie global_symbols;
         
     public:
         Compiler(Build_ptr build)
-        : build(build), src_ast(std::make_shared<ast::Source>()) {}
+        : build(build), root(std::make_shared<ast::RootModule>()), global_symbols() {}
         
         void run();
         
