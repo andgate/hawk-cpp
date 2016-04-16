@@ -1,13 +1,15 @@
-.: Test.Main
+Test.Main ::
+  -> System.Print
+  => Math.Vertex
 
-=> Test.Objects
+  Vertex :-
+    x: Int
+    y: Int
 
-Bool :- True | False
+  stuff ::
+    let :bar = 2
 
-stuff :.
-    $ bar = 2
-
-    foo: void :=
-        $ obj = MyObject 17 19
-        $ x = obj.add
-        print x
+    foo : void = do
+      let v = Vertex 3 4
+      v.x = v.x + 1
+      print v.x

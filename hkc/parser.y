@@ -1,5 +1,5 @@
 %skeleton "lalr1.cc" /* -*- C++ -*- */
-%require "3.0.4"
+%require "3.0.2"
 
 %defines
 %define parser_class_name { hawk_parser }

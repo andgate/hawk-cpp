@@ -10,7 +10,7 @@
 
 namespace ast
 {
-    pPrefixTrie validate_symbols(pRootModule root);
+    void validate_symbols(pRootModule root);
     
     struct SymbolValidator : public Visitor
     {

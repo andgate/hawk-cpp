@@ -2,7 +2,7 @@
 
 using namespace ast;
 
-pPrefixTrie ast::collect_global_symbols(pRootModule root)
+void ast::validate_symbols(pRootModule root)
 {
     SymbolValidator validator;
     root->accept(validator);
@@ -21,7 +21,7 @@ void SymbolValidator::visit(RootModule& n)
 void SymbolValidator::visit(Module& n)
 {
     id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     
     for(auto expr : n.exprs)
         expr->accept(*this);
@@ -33,7 +33,7 @@ void SymbolValidator::visit(Module& n)
 void SymbolValidator::visit(Submodule& n)
 {
     id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     
     for(auto expr : n.exprs)
         expr->accept(*this);
@@ -55,7 +55,7 @@ void SymbolValidator::visit(Return& n) {}
 void SymbolValidator::visit(Record& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     
     for(auto expr : n.exprs)
         expr->accept(*this);
@@ -66,7 +66,7 @@ void SymbolValidator::visit(Record& n)
 void SymbolValidator::visit(TaggedUnion& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     
     for(auto variant : n.variants)
         variant->accept(*this);
@@ -77,48 +77,48 @@ void SymbolValidator::visit(TaggedUnion& n)
 void SymbolValidator::visit(TaggedVariant& n)
 {
     id_path.push_back(n.tag);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(Variable& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(LocalVariable& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(GlobalVariable& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(Function& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(GlobalFunction& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }
 
 void SymbolValidator::visit(LocalFunction& n)
 {
     id_path.push_back(n.id);
-    trie->insert(id_path, &n);
+    symtab.insert(id_path, &n);
     id_path.pop_back();
 }

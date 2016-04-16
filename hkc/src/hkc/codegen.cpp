@@ -230,9 +230,9 @@ void CodeGen::visit(ast::Variable& n) {}
 
 void CodeGen::visit(ast::GlobalVariable& n)
 {
-    GlobalVariable* gvar_ptr = new GlobalVariable(*module,typeOf(n.type),false,
+    /*GlobalVariable* gvar_ptr = new GlobalVariable(*module,typeOf(n.type),false,
                                                   GlobalValue::CommonLinkage,
-                                                  getDefault(n.type),Twine(n.id));
+                                                  getDefault(n.type),Twine(n.id));*/
 }
 
 void CodeGen::visit(ast::Record& n) {}
