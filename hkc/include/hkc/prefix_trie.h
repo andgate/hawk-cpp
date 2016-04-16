@@ -20,16 +20,16 @@ typedef std::unordered_map<std::string, pPrefixTrie> PrefixTrieMap;
 struct PrefixTrie
 {
     std::string id;
-    ast::Node* data;
+    ast::Expression* data;
     PrefixTrieMap children;
     
     PrefixTrie() : id(), data(), children() {}
     PrefixTrie(std::string id)
     : id(id), data(), children() {}
-    PrefixTrie(std::string id, ast::Node* data)
+    PrefixTrie(std::string id, ast::Expression* data)
     : id(id), data(data), children() {}
     
-    void insert(std::vector<std::string> id_path, ast::Node* input);
+    void insert(std::vector<std::string> id_path, ast::Expression* input);
     void merge(PrefixTrie& sub);
     void merge(pPrefixTrie& sub);
     pPrefixTrie find_sub(std::string id);

@@ -9,13 +9,10 @@
 
 namespace ast
 {
-    class Node;
-    class RootModule;
+    class Expression;
     class Module;
-    class Submodule;
     class ModuleIdentifier;
     class Import;
-    class Expression;
     class IdentifierRef;
     class Integer;
     class Decimal;
@@ -37,10 +34,8 @@ namespace ast
     
     typedef std::string Identifier;
     
-    typedef std::shared_ptr<Node> pNode;
-    typedef std::shared_ptr<RootModule> pRootModule;
+    typedef std::shared_ptr<Expression> pExpression;
     typedef std::shared_ptr<Module> pModule;
-    typedef std::shared_ptr<Submodule> pSubmodule;
     typedef std::shared_ptr<ModuleIdentifier> pModuleIdentifier;
     typedef std::shared_ptr<Import> pImport;
     typedef std::shared_ptr<Expression> pExpression;
@@ -86,20 +81,11 @@ namespace ast
 
     class Visitor;
 
-    struct Node
-    {
-        virtual ~Node() {}
-        
-        virtual void accept(Visitor& v) = 0;
-    };
-
     struct Visitor
     {
         virtual ~Visitor() {}
         
-        virtual void visit(RootModule& n) = 0;
         virtual void visit(Module& n) = 0;
-        virtual void visit(Submodule& n) = 0;
         virtual void visit(Import& n) = 0;
         virtual void visit(IdentifierRef& n) = 0;
         virtual void visit(Integer& n) = 0;
@@ -123,40 +109,23 @@ namespace ast
         virtual void visit(LocalFunction& n) = 0;
     };
 
-    struct Expression : public Node
+    struct Expression
     {
-        virtual void accept(Visitor &v) {}
-    };
-    
-    struct RootModule : public Node
-    {
-        pModuleVec modules;
+        virtual ~Expression() {}
         
-        RootModule()
-        : modules() { }
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
+        virtual void accept(Visitor& v) = 0;
     };
 
-    struct Module : public Node
+    struct Module : public Expression
     {
         IdentifierVec id_path;
         pExpressionVec exprs;
         
+        Module()
+        : id_path(), exprs() { }
         Module(IdentifierVec id_path)
         : id_path(id_path), exprs() { }
         Module(IdentifierVec id_path, pExpressionVec exprs)
-        : id_path(id_path), exprs(exprs) { }
-        
-        virtual void accept(Visitor &v) { v.visit(*this); }
-    };
-    
-    struct Submodule : public Expression
-    {   
-        IdentifierVec id_path;
-        pExpressionVec exprs;
-        
-        Submodule(IdentifierVec id_path, pExpressionVec exprs)
         : id_path(id_path), exprs(exprs) { }
         
         virtual void accept(Visitor &v) { v.visit(*this); }
@@ -386,21 +355,7 @@ namespace ast
     
     struct VisitorAdapter : public Visitor
     {
-        virtual void visit(RootModule& n)
-        {
-            for(auto module : n.modules)
-            {
-                module->accept(*this);
-            }
-        }
-        
         virtual void visit(Module& n)
-        {
-            for(auto expr : n.exprs)
-                expr->accept(*this);
-        }
-        
-        virtual void visit(Submodule& n)
         {
             for(auto expr : n.exprs)
                 expr->accept(*this);

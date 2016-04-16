@@ -9,7 +9,7 @@
 
 namespace ast
 {
-    pPrefixTrie collect_global_symbols(pRootModule root);
+    pPrefixTrie collect_global_symbols(pModule root);
     
     struct GlobalSymbolCollector : public Visitor
     {
@@ -19,9 +19,7 @@ namespace ast
         GlobalSymbolCollector()
         : trie(), id_path() {}
         
-        void visit(RootModule& n) override;
         void visit(Module& n) override;
-        void visit(Submodule& n) override;
         
         void visit(Import& n) override;
         void visit(IdentifierRef& n) override;

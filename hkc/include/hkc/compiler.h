@@ -15,12 +15,12 @@ namespace hkc
     {
     private:
         Build_ptr build;
-        ast::pRootModule root;
+        ast::pModule root;
         pPrefixTrie global_symbols;
         
     public:
         Compiler(Build_ptr build)
-        : build(build), root(std::make_shared<ast::RootModule>()), global_symbols() {}
+        : build(build), root(std::make_shared<ast::Module>()), global_symbols() {}
         
         void run();
         

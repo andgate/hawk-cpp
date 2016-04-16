@@ -6,16 +6,14 @@
 
 namespace ast
 {
-    void print(pRootModule& src);
+    void print(pModule& src);
     
     class Printer : public Visitor
     {
     public:
         Printer(): ws(), curr_indent(0) {}
         
-        void visit(RootModule& n) override;
         void visit(Module& n) override;
-        void visit(Submodule& n) override;
         
         void visit(Import& n) override;
         

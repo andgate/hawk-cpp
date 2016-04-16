@@ -6,18 +6,10 @@ using namespace std;
 using namespace ast;
 
 
-void ast::print(pRootModule& root)
+void ast::print(pModule& root)
 {
     Printer printer;
     root->accept(printer);
-}
-
-void Printer::visit(RootModule& n)
-{        
-    for(auto module : n.modules)
-    {
-        module->accept(*this);
-    }
 }
 
 void Printer::visit(Module& n)
@@ -25,18 +17,6 @@ void Printer::visit(Module& n)
     cout << "Module" << endl;
     indent();
         cout << ws << "- id_path: " << mk_id(n.id_path) << endl;
-        cout << ws << "- exprs:" << endl;
-        indent();
-            for(auto expr : n.exprs) expr->accept(*this);
-        undent();
-    undent();
-}
-
-void Printer::visit(Submodule& n)
-{
-    cout << ws << "Submodule" << endl;
-    indent();
-        cout << ws << "- id: " << mk_id(n.id_path) << endl;
         cout << ws << "- exprs:" << endl;
         indent();
             for(auto expr : n.exprs) expr->accept(*this);

@@ -1,23 +1,33 @@
 # Hawk
 Hawk is a languaged designed to function very similar to C++, but borrowing elements from Haskell's type system and clean syntax style. Hawk is intended to strike a balance between clarity and control. Check out the prototype code for examples of how a Hawk program should look. Currently the compiler needs to be built, which you can find in hawkc. As time goes on, this will eventually contain the base toolchain for development with Hawk 
 
-# Symbol List
+
+### Building
+Requires Flex, Bison, Boost, LLVM, and GTest.
+To build hawk, run the following command in the root directory.
+```Bash
+mkdir build && cd build && cmake ..
+```
+
+#
+
+### Symbol Cheatsheet
 Hawk syntax mostly avoids the use of reserved keywords. Instead, hawk makes use of operator symbols to declare variables, functions, and data types.
 
 __Module System__
 
 | Symbol | Meaning |
 |   ---: | :---    |
-|     .: | Module  |
+|     :: | Module  |
 |     -> | Import module |
 |     => | Import module as Qualified |
-|     :. | Submodule contains |
 
 __Expression System__
 
 | Symbol | Meaning |
 |   ---: | :---    |
 |      $ | Declare Variable |
+|      # | Declare Value    |
 |      = | Assignment |
 |     := | Define function |
 |      ^ | Return |
@@ -31,7 +41,7 @@ __Type System__
 |     :+ | Implementation |
 |     <: | Subtype of |
 |      ! |  Immutable |
-|     \* | Pointer |
+|     \* | Pointer   |
 |      & | Reference |
 
 
@@ -55,10 +65,4 @@ Main repository: flock.io
 
 X-Plat GUI library: peacock
 
-IDE: 
-
-# Building
-Need to build boost for yourself, static and multi-threaded.
-To build hawk, go into the root directory and create a folder called "build".
-On the command line, enter the build directory and use cmake to setup the build system.
-"cmake .."
+IDE: Sky

@@ -109,10 +109,8 @@ namespace ast
 %define api.token.prefix {TOK_}
 %token
   END  0    "end of file"
-  
-  PCOLON    ".:"
-  COLONP    ":."
-  CCOLON    "::"
+
+  DBLCOLON  "::"
   
   FUNCDEC   ":="
   TYPEDEC   ":-"
@@ -168,8 +166,7 @@ namespace ast
 
 %printer { yyoutput << (&$$); } <*>;
 
-%type <ast::pModule> module
-%type <ast::pSubmodule> submod
+%type <ast::pModule> mod_dec ast
 %type <ast::pModuleIdentifier> mod_id
 %type <ast::pModuleIdentifierVec> mod_id_specifier mod_ids
 %type <ast::pImport> import
@@ -190,13 +187,10 @@ namespace ast
 %%
 
 
-%start module;
-module : %empty                    { }
-       | top_stmts END             { driver.result->exprs = $1; }
-       | module_name top_stmts END { driver.result->id_path = $1; driver.result->exprs = $2; }
-       ;
-       
-module_name : ".:" mod_id_base { $$ = $2; };
+%start ast;
+ast : %empty        { }
+    | top_stmts END { driver.result->exprs = $1; }
+    ;
        
        
 top_stmts : top_stmt           { $$ = ast::pExpressionVec(); $$.push_back($1); }
@@ -207,12 +201,11 @@ top_stmts : top_stmt           { $$ = ast::pExpressionVec(); $$.push_back($1); }
 
 top_stmt : import      { ast::pExpression t = $1; $$ = t; }
          | global_func { ast::pExpression t = $1; $$ = t; }
-         | submod      { ast::pExpression t = $1; $$ = t; }
+         | mod_dec     { ast::pExpression t = $1; $$ = t; }
          | typedef     { $$ = $1; }
          ;
          
-submod : mod_id_base ":." "{" top_stmts "}" { $$ = std::make_shared<ast::Submodule>($1, $4); }
-       ;
+mod_dec : mod_id_base "::" "{" top_stmts "}" { $$ = std::make_shared<ast::Module>($1, $4); };
        
 import : "->" mod_id { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), "", false); }
        | "->" mod_id "=" ident { $$ = std::make_shared<ast::Import>(ast::mk_mod_id($2), $4, false); }

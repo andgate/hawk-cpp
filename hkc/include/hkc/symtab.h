@@ -24,7 +24,7 @@ struct SymbolTable
     
     SymbolTable() : curr_path(), scopes(), symbols() {}
     
-    void insert(ast::IdentifierVec qual_id, ast::Node* input);
+    void insert(ast::IdentifierVec qual_id, ast::Expression* input);
     void clear();
     
     void enter_scope();

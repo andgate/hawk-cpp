@@ -53,9 +53,7 @@ public:
     void print_ir();
     void write_ir(const std::string& out_file);
     
-    void visit(ast::RootModule& n) override;
     void visit(ast::Module& n) override;
-    void visit(ast::Submodule& n) override;
     void visit(ast::Import& n) override;
     
     void visit(ast::IdentifierRef& n) override;

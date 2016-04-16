@@ -2,35 +2,13 @@
 
 using namespace ast;
 
-void ast::validate_symbols(pRootModule root)
+void ast::validate_symbols(pModule root)
 {
     SymbolValidator validator;
     root->accept(validator);
 }
 
-
-void SymbolValidator::visit(RootModule& n)
-{
-    for(auto module : n.modules)
-    {
-        symtab.clear();
-        module->accept(*this);
-    }
-}
-
 void SymbolValidator::visit(Module& n)
-{
-    id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
-    symtab.insert(id_path, &n);
-    
-    for(auto expr : n.exprs)
-        expr->accept(*this);
-    
-    for(size_t i = 0; i < n.id_path.size(); ++i)
-        id_path.pop_back();
-}
-
-void SymbolValidator::visit(Submodule& n)
 {
     id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
     symtab.insert(id_path, &n);

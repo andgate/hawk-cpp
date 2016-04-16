@@ -10,7 +10,7 @@
 
 namespace ast
 {
-    void validate_symbols(pRootModule root);
+    void validate_symbols(pModule root);
     
     struct SymbolValidator : public Visitor
     {
@@ -20,9 +20,7 @@ namespace ast
         SymbolValidator()
         : symtab(), id_path() {}
         
-        void visit(RootModule& n) override;
         void visit(Module& n) override;
-        void visit(Submodule& n) override;
         
         void visit(Import& n) override;
         void visit(IdentifierRef& n) override;

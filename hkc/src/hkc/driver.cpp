@@ -16,7 +16,6 @@ bool hawk_driver::parse(const std::string& f)
     
     fs::path p(f);
     ast::IdentifierVec mod_name;
-    mod_name.push_back(p.filename().string());
     result = std::make_shared<ast::Module>(mod_name, ast::pExpressionVec());
     
     scan_begin();

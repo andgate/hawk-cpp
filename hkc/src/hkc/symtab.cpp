@@ -1,6 +1,6 @@
 #include "hkc/symtab.h"
 
-void SymbolTable::insert(ast::IdentifierVec qual_id, ast::Node* input)
+void SymbolTable::insert(ast::IdentifierVec qual_id, ast::Expression* input)
 {
     scopes.back().symbols.push_back(qual_id);
     symbols.insert(qual_id, input);

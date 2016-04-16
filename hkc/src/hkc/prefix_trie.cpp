@@ -1,7 +1,7 @@
 #include "hkc/prefix_trie.h"
 
 
-void PrefixTrie::insert(std::vector<std::string> id_path, ast::Node* input)
+void PrefixTrie::insert(std::vector<std::string> id_path, ast::Expression* input)
 {
     PrefixTrie* curr_dict = this;
     size_t id_path_index = 0;

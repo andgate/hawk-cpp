@@ -12,14 +12,14 @@ typedef std::shared_ptr<SuffixTrie> pSuffixTrie;
 
 struct SuffixTrie
 {
-    ast::Node* data;
+    ast::Expression* data;
     std::unordered_map<std::string, pSuffixTrie> children;
     
     SuffixTrie(): data(), children() {}
     
-    void insert(std::vector<std::string> id_path, ast::Node* input);
+    void insert(std::vector<std::string> id_path, ast::Expression* input);
     void clear();
-    ast::Node* find(std::vector<std::string> id_path);
+    ast::Expression* find(std::vector<std::string> id_path);
     void remove(ast::IdentifierVec id_path);
     
     /*void print();*/

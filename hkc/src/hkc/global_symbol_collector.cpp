@@ -2,33 +2,18 @@
 
 using namespace ast;
 
-pPrefixTrie ast::collect_global_symbols(pRootModule root)
+pPrefixTrie ast::collect_global_symbols(pModule root)
 {
     GlobalSymbolCollector collector;
-    root->accept(collector);
+    collector.trie = std::make_shared<PrefixTrie>("", root.get());
+    
+    for(auto expr : root->exprs)
+        expr->accept(collector);
+        
     return collector.trie;
 }
 
-
-void GlobalSymbolCollector::visit(RootModule& n)
-{
-    trie = std::make_shared<PrefixTrie>("", &n);
-    for(auto module : n.modules) module->accept(*this);
-}
-
 void GlobalSymbolCollector::visit(Module& n)
-{
-    id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
-    trie->insert(id_path, &n);
-    
-    for(auto expr : n.exprs)
-        expr->accept(*this);
-    
-    for(size_t i = 0; i < n.id_path.size(); ++i)
-        id_path.pop_back();
-}
-
-void GlobalSymbolCollector::visit(Submodule& n)
 {
     id_path.insert(id_path.end(), n.id_path.begin(), n.id_path.end());
     trie->insert(id_path, &n);

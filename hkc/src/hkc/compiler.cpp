@@ -25,7 +25,7 @@ void hkc::Compiler::run()
     // 2. Various ast passes
     
     // 3. Produce the executable/library
-    produce_output();
+    //produce_output();
 }
 
 void hkc::Compiler::parse()
@@ -38,7 +38,7 @@ void hkc::Compiler::parse()
     for(auto in_file : build->in_files)
     {
         has_error = has_error & !driver.parse(in_file);
-        root->modules.push_back(driver.result);
+        root->exprs.push_back(driver.result);
         driver.reset();
     }
     
@@ -54,8 +54,8 @@ void hkc::Compiler::process()
     //ast::gen_gdict(root);
     //ast::gen_imports(root);
     ast::print(root);
-    global_symbols = ast::collect_global_symbols(root);
-    global_symbols->print();
+    //global_symbols = ast::collect_global_symbols(root);
+    //global_symbols->print();
 }
 
 void hkc::Compiler::produce_output()
@@ -67,15 +67,13 @@ void hkc::Compiler::produce_output()
     ir_dir /= "intermediates/ir";
     fs::create_directories(ir_dir);
     
-    for(auto module : root->modules)
-    {
-        auto out_path = ir_dir / ast::mk_id(module->id_path);
-        out_path.replace_extension("ll");
-        const std::string out_file(out_path.string());
-        
-        gen_ir(*module, out_file);
-        ir_files.push_back(std::move(out_file));
-    }
+    // Generate one IR file
+    auto out_path = ir_dir / ast::mk_id(root->id_path);
+    out_path.replace_extension("ll");
+    const std::string out_file(out_path.string());
+    
+    gen_ir(*root, out_file);
+    ir_files.push_back(std::move(out_file));
     
     
     fs::path asm_dir(build->build_dir);

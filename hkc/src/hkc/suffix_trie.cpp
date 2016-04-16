@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-void SuffixTrie::insert(std::vector<std::string> id_path, ast::Node* input)
+void SuffixTrie::insert(std::vector<std::string> id_path, ast::Expression* input)
 {
     SuffixTrie* curr_node = this;
     
@@ -24,7 +24,7 @@ void SuffixTrie::clear()
     children.clear();
 }
 
-ast::Node* SuffixTrie::find(std::vector<std::string> id_path)
+ast::Expression* SuffixTrie::find(std::vector<std::string> id_path)
 {
     SuffixTrie* curr_node = this;
     

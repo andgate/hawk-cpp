@@ -204,8 +204,7 @@ inline_comment     "//".*
     "/*"        step_tok(); yy_push_state(block_comment);
     "//"        step_tok(); yy_push_state(inline_comment);
     
-    ".:"        step_tok(); return yy::hawk_parser::make_PCOLON(loc);
-    ":."        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_COLONP(loc);
+    "::"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_DBLCOLON(loc);
     
     ":-"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPEDEC(loc);
     ":~"        step_tok(); yy_push_state(layout_float); return yy::hawk_parser::make_TYPECLASS(loc);
